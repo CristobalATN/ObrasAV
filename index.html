@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Declaración de Obras Audiovisuales</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+  <header class="header">
+    <img src="assets/Logo-Fondo-Transparente@3x(1).png" alt="Logo organización" class="logo">
+    <h1>Declaración de Obras Audiovisuales</h1>
+  </header>
+  <main>
+    <div id="wizard-progress" class="wizard-progress"></div>
+    <form id="wizard-form" autocomplete="off">
+      <div class="wizard-container">
+        <section id="step-1" class="wizard-step active">
+          <!-- Los campos se llenarán dinámicamente con JS -->
+        </section>
+        <section id="step-2" class="wizard-step">
+          <!-- Sección de exhibición internacional -->
+        </section>
+      </div>
+      <div class="wizard-buttons">
+        <button type="button" id="prev-btn" class="btn" disabled>Atrás</button>
+        <button type="button" id="next-btn" class="btn btn-primary">Siguiente</button>
+        <button type="submit" id="submit-btn" class="btn btn-success" style="display:none">Enviar Declaración</button>
+      </div>
+    </form>
+    <div id="form-message" class="form-message"></div>
+  </main>
+  <script src="form-wizard.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</body>
+</html> 
