@@ -10,6 +10,10 @@ const steps = [
   {
     title: 'Exhibición Internacional',
     render: renderStep2
+  },
+  {
+    title: 'Participaciones',
+    render: renderStep3
   }
   // Aquí se pueden agregar más pasos en el futuro
 ];
@@ -17,6 +21,7 @@ const steps = [
 let currentStep = 0;
 let formData = {};
 let generosData = [];
+let rolesData = [];
 
 // Cargar datos de los JSON
 const fetchJSON = async (file) => {
@@ -174,6 +179,91 @@ async function inicializarSelect2() {
   });
 }
 
+// Renderizar la sección de participaciones
+async function renderStep3(container) {
+  rolesData = await fetchJSON('rol.json');
+  container.innerHTML = `
+    <div id="participaciones-container"></div>
+    <button type="button" id="agregar-participacion" class="btn btn-secondary" style="margin-top: 20px;">
+      + Agregar Participación
+    </button>
+  `;
+
+  agregarParticipacion();
+
+  document.getElementById('agregar-participacion').addEventListener('click', agregarParticipacion);
+
+  if (window.$ && window.$.fn.select2) {
+    inicializarSelect2Participaciones();
+  }
+}
+
+function agregarParticipacion(data = {}) {
+  const container = document.getElementById('participaciones-container');
+  const id = Date.now() + Math.floor(Math.random() * 1000);
+
+  const opcionesRol = rolesData.map(r => `<option value="${r.Rol}">${r.Rol}</option>`).join('');
+
+  const html = `
+    <div class="participacion-item" id="participacion-${id}" style="margin-bottom:30px; padding:20px; border:1px solid #e0e0e0; border-radius:8px; background:#f9f9f9;">
+      <div class="form-row">
+        <div class="form-group" style="flex:1; margin-right:15px;">
+          <label for="rol-${id}">Rol</label>
+          <select id="rol-${id}" name="participaciones[${id}][rol]" class="rol-select">
+            <option value="">Seleccione...</option>
+            ${opcionesRol}
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; margin-right:15px;">
+          <label for="autor-${id}">Autor</label>
+          <select id="autor-${id}" name="participaciones[${id}][autor]" class="autor-select">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label for="porcentaje-${id}">Participación (%)</label>
+          <input type="number" step="0.01" min="0" max="100" id="porcentaje-${id}" name="participaciones[${id}][porcentaje]" placeholder="0.0">
+        </div>
+      </div>
+      <button type="button" class="btn-eliminar" data-participacion-id="${id}" style="color: #dc3545; background: none; border: none; cursor: pointer; padding: 5px 0; display: flex; align-items: center;">
+        <span style="color: #dc3545; margin-right: 5px;">\u00d7</span> Eliminar
+      </button>
+    </div>
+  `;
+
+  container.insertAdjacentHTML('beforeend', html);
+
+  const item = document.getElementById(`participacion-${id}`);
+  if (data.rol) item.querySelector(`#rol-${id}`).value = data.rol;
+  if (data.autor) item.querySelector(`#autor-${id}`).value = data.autor;
+  if (data.porcentaje) item.querySelector(`#porcentaje-${id}`).value = data.porcentaje;
+
+  if (window.$ && window.$.fn.select2) {
+    inicializarSelect2Participaciones();
+  }
+
+  const btnEliminar = document.querySelector(`[data-participacion-id="${id}"]`);
+  if (btnEliminar) {
+    btnEliminar.addEventListener('click', () => {
+      const elemento = document.getElementById(`participacion-${id}`);
+      if (elemento) elemento.remove();
+    });
+  }
+}
+
+function inicializarSelect2Participaciones() {
+  $('.rol-select').each(function() {
+    if (!$(this).hasClass('select2-hidden-accessible')) {
+      $(this).select2({ placeholder: 'Seleccione...', width: '100%', allowClear: true });
+    }
+  });
+  $('.autor-select').each(function() {
+    if (!$(this).hasClass('select2-hidden-accessible')) {
+      $(this).select2({ placeholder: 'Seleccione...', width: '100%', allowClear: true });
+    }
+  });
+}
+
 // Renderizar el primer paso
 async function renderStep1(container) {
   // Cargar datos
@@ -307,7 +397,7 @@ function normalizarNombres(str) {
 // Función para guardar los datos del paso 2 (exhibiciones internacionales)
 function saveStep2Data() {
   // Asegurarse de que formData.step2 existe
-  if (!formData) formData = { step1: {}, step2: { exhibiciones: [] } };
+  if (!formData) formData = { step1: {}, step2: { exhibiciones: [] }, step3: { participaciones: [] } };
   if (!formData.step2) formData.step2 = { exhibiciones: [] };
   
   // Inicializar array de exhibiciones
@@ -332,12 +422,36 @@ function saveStep2Data() {
   return true;
 }
 
+function saveStep3Data() {
+  if (!formData) formData = { step1: {}, step2: { exhibiciones: [] }, step3: { participaciones: [] } };
+  if (!formData.step3) formData.step3 = { participaciones: [] };
+
+  formData.step3.participaciones = [];
+
+  const items = document.querySelectorAll('.participacion-item');
+
+  items.forEach(item => {
+    const datos = {
+      id: item.id.replace('participacion-', ''),
+      rol: item.querySelector('select[name$="[rol]"]')?.value || '',
+      autor: item.querySelector('select[name$="[autor]"]')?.value || '',
+      porcentaje: parseFloat(item.querySelector('input[name$="[porcentaje]"]')?.value || '0')
+    };
+    formData.step3.participaciones.push(datos);
+  });
+
+  console.log('Datos del paso 3 guardados:', formData.step3);
+  return true;
+}
+
 // Función para guardar los datos del paso actual
 function saveCurrentStepData() {
   if (currentStep === 0) {
     saveStep1Data();
   } else if (currentStep === 1) {
     saveStep2Data();
+  } else if (currentStep === 2) {
+    saveStep3Data();
   }
   // Agregar más pasos según sea necesario
 }
@@ -348,6 +462,8 @@ function restoreStepData(stepIndex, container) {
     restoreStep1Data(container);
   } else if (stepIndex === 1 && formData.step2) {
     restoreStep2Data(container);
+  } else if (stepIndex === 2 && formData.step3) {
+    restoreStep3Data(container);
   }
   // Agregar más pasos según sea necesario
 }
@@ -572,6 +688,59 @@ function validateStep2() {
   return true; // No hay validaciones requeridas para esta sección
 }
 
+function validateStep3() {
+  let isValid = true;
+
+  const items = document.querySelectorAll('.participacion-item');
+  const acumulados = {};
+
+  if (items.length === 0) {
+    alert('Agregue al menos una participación');
+    return false;
+  }
+
+  document.querySelectorAll('.error-message').forEach(el => el.remove());
+  document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+
+  items.forEach(item => {
+    const rolSelect = item.querySelector('select[name$="[rol]"]');
+    const porcInput = item.querySelector('input[name$="[porcentaje]"]');
+
+    const rol = rolSelect ? rolSelect.value : '';
+    const porc = parseFloat(porcInput ? porcInput.value : '');
+
+    if (!rol) {
+      showError(rolSelect, 'Seleccione el rol');
+      isValid = false;
+    } else {
+      clearError(rolSelect);
+    }
+
+    if (isNaN(porc)) {
+      showError(porcInput, 'Ingrese la participación');
+      isValid = false;
+    } else if (porc < 0 || porc > 100) {
+      showError(porcInput, 'Porcentaje inválido');
+      isValid = false;
+    } else {
+      clearError(porcInput);
+    }
+
+    if (rol) {
+      acumulados[rol] = (acumulados[rol] || 0) + (isNaN(porc) ? 0 : porc);
+    }
+  });
+
+  Object.entries(acumulados).forEach(([rol, total]) => {
+    if (total > 100) {
+      alert(`La suma de porcentajes para el rol "${rol}" supera el 100%`);
+      isValid = false;
+    }
+  });
+
+  return isValid;
+}
+
 // Mostrar mensajes
 function showMessage(msg, error = false) {
   const el = document.getElementById('form-message');
@@ -595,14 +764,15 @@ if (!window.formData) {
       directores: '',
       guionistas: ''
     },
-    step2: { exhibiciones: [] }
+    step2: { exhibiciones: [] },
+    step3: { participaciones: [] }
   };
 }
 
 // Guardar datos del paso 1
 function saveStep1Data() {
   // Asegurarse de que formData.step1 existe
-  if (!formData) formData = { step1: {}, step2: { exhibiciones: [] } };
+  if (!formData) formData = { step1: {}, step2: { exhibiciones: [] }, step3: { participaciones: [] } };
   if (!formData.step1) formData.step1 = {};
   
   // Obtener referencias a los elementos del formulario
@@ -682,11 +852,25 @@ function restoreStep1Data(container) {
   console.log('Datos del paso 1 restaurados');
 }
 
+function restoreStep3Data(container) {
+  if (!formData.step3) return;
+
+  const cont = document.getElementById('participaciones-container');
+  if (!cont) return;
+  cont.innerHTML = '';
+
+  formData.step3.participaciones.forEach(p => {
+    agregarParticipacion(p);
+  });
+}
+
 // Envío simulado
 async function submitForm(e) {
   e.preventDefault();
   if (!validateStep1()) return;
+  if (!validateStep3()) return;
   saveStep1Data();
+  saveStep3Data();
   document.getElementById('submit-btn').disabled = true;
   showMessage('Enviando declaración...');
   try {
