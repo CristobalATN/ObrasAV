@@ -6,6 +6,7 @@
   <title>Declaración de Obras Audiovisuales</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <header class="header">
@@ -13,26 +14,278 @@
     <h1>Declaración de Obras Audiovisuales</h1>
   </header>
   <main>
-    <div id="wizard-progress" class="wizard-progress"></div>
+    <div class="progress-container">
+      <div class="progress-container-inner">
+        <button class="nav-arrow prev" aria-label="Anterior">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="progress-slider">
+          <div class="progress-track">
+            <div class="progress-slide" data-step="1">
+              <div class="progress-step">1</div>
+              <span class="step-label">Datos Generales</span>
+            </div>
+            <div class="progress-slide" data-step="2">
+              <div class="progress-step">2</div>
+              <span class="step-label">Exhibición Internacional</span>
+            </div>
+            <div class="progress-slide" data-step="3">
+              <div class="progress-step">3</div>
+              <span class="step-label">Datos Técnicos</span>
+            </div>
+            <div class="progress-slide" data-step="4">
+              <div class="progress-step">4</div>
+              <span class="step-label">Participaciones</span>
+            </div>
+            <div class="progress-slide" data-step="5">
+              <div class="progress-step">5</div>
+              <span class="step-label">Episodios</span>
+            </div>
+          </div>
+        </div>
+        <button class="nav-arrow next" aria-label="Siguiente">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
     <form id="wizard-form" autocomplete="off">
       <div class="wizard-container">
-        <section id="step-1" class="wizard-step active">
-          <!-- Los campos se llenarán dinámicamente con JS -->
+        <section id="step-1" class="wizard-step"></section>
+        <section id="step-2" class="wizard-step"></section>
+        <section id="step-3" class="wizard-step"></section>
+        <section id="step-4" class="wizard-step">
+          <div id="participaciones-bloqueada" class="subbloque" style="display:none;">
+            <div class="subbloque-header-collapsible">
+              <h4>Participaciones</h4>
+            </div>
+            <div class="subbloque-content">
+              <div class="bloqueado-mensaje" style="background:#f8d7da;color:#721c24;padding:20px;border-radius:8px;border:1px solid #f5c6cb;margin-bottom:20px;">
+                <i class="fas fa-lock" style="margin-right:8px;"></i>
+                La sección de participaciones está bloqueada porque la participación se gestiona por episodio. En la siguiente sección puedes gestionar las participaciones por episodio.
+              </div>
+            </div>
+          </div>
+          <!-- Aquí va el contenido normal de participaciones, que debe ocultarse si la obra es serializada -->
         </section>
-        <section id="step-2" class="wizard-step">
-          <!-- Sección de exhibición internacional -->
+        <section id="step-5" class="wizard-step">
+          <!-- Subbloque 2: Títulos de episodios -->
+          <div class="subbloque">
+            <div class="subbloque-header-collapsible">
+              <h4>Títulos de episodios</h4>
+              <button type="button" class="btn-toggle-subbloque">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+            <div class="subbloque-content">
+              <div class="episodios-titulos"></div>
+              <button type="button" class="btn btn-outline-success btn-gestionar-titulos" style="margin-top:10px;">
+                <i class="fas fa-table"></i> Gestionar Otros Títulos
+              </button>
+            </div>
+          </div>
         </section>
       </div>
       <div class="wizard-buttons">
+        <button type="button" id="cancel-btn" class="btn btn-secondary">Cancelar</button>
         <button type="button" id="prev-btn" class="btn" disabled>Atrás</button>
         <button type="button" id="next-btn" class="btn btn-primary">Siguiente</button>
         <button type="submit" id="submit-btn" class="btn btn-success" style="display:none">Enviar Declaración</button>
       </div>
     </form>
     <div id="form-message" class="form-message"></div>
+
+    <!-- Modal para gestionar participaciones (movido dentro del body principal) -->
+    <div id="modalParticipaciones" class="modal-atn" style="display:none;">
+      <div class="modal-atn-content" style="max-width:900px;">
+        <div class="modal-atn-header-green">
+          <h3>Gestionar participaciones</h3>
+        </div>
+        <div class="modal-atn-body">
+          <table class="tabla-participaciones">
+            <thead>
+              <tr>
+                <th>Rol</th>
+                <th>Autor</th>
+                <th>Porcentaje</th>
+                <th>Eliminar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Filas dinámicas -->
+            </tbody>
+          </table>
+          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline-success btn-agregar-participacion">
+              <i class="fas fa-plus"></i> Agregar participación
+            </button>
+          </div>
+          <div id="participaciones-modal-error" class="form-message" style="color:#dc3545;margin-top:10px;"></div>
+          <div class="modal-atn-buttons">
+            <button type="button" class="btn btn-success btn-guardar-participaciones">Guardar cambios</button>
+<button type="button" class="btn btn-secondary btn-cerrar-participaciones">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
-  <script src="form-wizard.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-</body>
-</html> 
+  <script src="form-wizard.js"></script>
+    <!-- Modal de confirmación para cancelar -->
+    <div id="modalCancelar" class="modal-atn">
+      <div class="modal-atn-content">
+        <div class="modal-atn-header-green">
+          <h3>Confirmar Cancelación</h3>
+        </div>
+        <div class="modal-atn-message">
+          <p>¿Está seguro que desea cancelar la declaración? Todos los datos ingresados se perderán.</p>
+        </div>
+        <div class="modal-atn-buttons">
+          <button type="button" id="modalCancelarSi" class="modal-btn-lg btn-secondary">Sí, Cancelar</button>
+          <button type="button" id="modalCancelarNo" class="modal-btn-lg btn-primary">No, Continuar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+      <div class="loading-content">
+        <div class="spinner-institucional">
+          <svg width="50" height="50" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="20" fill="none" stroke="#097137" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.416" stroke-dashoffset="31.416">
+              <animate attributeName="stroke-dashoffset" dur="1.5s" values="31.416;0;31.416" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+        <p>Cancelando y limpiando datos...</p>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  </body>
+</html>
+
+<!-- Modal para gestionar otros títulos por episodio -->
+<div id="modalTitulosEpisodio" class="modal-atn" style="display:none;">
+  <div class="modal-atn-content" style="max-width:900px;">
+    <div class="modal-atn-header-green">
+      <h3>Otros títulos por episodio</h3>
+    </div>
+    <div class="modal-atn-body">
+      <table class="tabla-titulos-episodio">
+        <thead>
+          <tr>
+            <th>Episodio</th>
+            <th>Otro título</th>
+            <th>Idioma</th>
+            <th>País</th>
+            <th>Eliminar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filas dinámicas -->
+        </tbody>
+      </table>
+      <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline-success btn-agregar-titulo-episodio">
+          <i class="fas fa-plus"></i> Agregar otro título
+        </button>
+        <button type="button" class="btn btn-secondary btn-ayuda-importar">
+          <i class="fas fa-question-circle"></i> Ayuda importación
+        </button>
+        <button type="button" class="btn btn-secondary btn-importar-titulos-episodio">
+          <i class="fas fa-file-import"></i> Importar títulos
+        </button>
+        <input type="file" accept=".csv, .xlsx, .xls" class="input-importar-titulos-episodio" style="display:none">
+        <button type="button" class="btn btn-secondary btn-pegar-titulos-episodio">
+          <i class="fas fa-paste"></i> Pegar títulos
+        </button>
+      </div>
+    </div>
+    <div class="modal-atn-buttons" style="margin-top:20px;">
+      <button type="button" class="btn btn-success btn-guardar-titulos-episodio">Guardar cambios</button>
+      <button type="button" class="btn btn-secondary btn-cerrar-titulos-episodio">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para gestionar participaciones -->
+<div id="modalParticipaciones" class="modal-atn" style="display:none;">
+  <div class="modal-atn-content" style="max-width:900px;">
+    <div class="modal-atn-header-green">
+      <h3>Gestionar participaciones</h3>
+    </div>
+    <div class="modal-atn-body">
+      <table class="tabla-participaciones">
+        <thead>
+          <tr>
+            <th>Rol</th>
+            <th>Autor</th>
+            <th>Porcentaje</th>
+            <th>Eliminar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filas dinámicas -->
+        </tbody>
+      </table>
+      <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline-success btn-agregar-participacion">
+          <i class="fas fa-plus"></i> Agregar participación
+        </button>
+      </div>
+    </div>
+    <div class="modal-atn-buttons" style="margin-top:20px;">
+      <button type="button" class="btn btn-success btn-guardar-participaciones">Guardar cambios</button>
+      <button type="button" class="btn btn-secondary btn-cerrar-participaciones">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de ayuda para importación -->
+<div id="modalAyudaImportar" class="modal-atn" style="display:none;">
+  <div class="modal-atn-content">
+    <div class="modal-atn-header-green">
+      <h3>Ayuda para importación de títulos</h3>
+    </div>
+    <div class="modal-atn-body">
+      <h4>Importar desde archivo Excel/CSV</h4>
+      <p>El archivo debe contener las siguientes columnas en orden:</p>
+      <ol>
+        <li><strong>Episodio:</strong> Número del episodio</li>
+        <li><strong>Título:</strong> Título alternativo del episodio</li>
+        <li><strong>Idioma:</strong> Idioma del título</li>
+        <li><strong>País:</strong> País donde se utiliza el título</li>
+      </ol>
+      <p><small>Nota: No es necesario incluir encabezados en el archivo.</small></p>
+      
+      <h4>Pegar títulos</h4>
+      <p>Al usar la opción "Pegar títulos", debe seguir el formato:</p>
+      <pre>Episodio,Título,Idioma,País</pre>
+      <p>Ejemplo:</p>
+      <pre>1,Título alternativo,Español,Chile
+2,Alternative title,Inglés,Estados Unidos</pre>
+    </div>
+    <div class="modal-atn-buttons">
+      <button type="button" class="btn btn-success btn-cerrar-ayuda">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para pegar títulos de episodios -->
+<div id="modalPegarTitulosEpisodio" class="modal-atn" style="display:none;">
+  <div class="modal-atn-content">
+    <div class="modal-atn-header-green">
+      <h3>Pegar títulos de episodios</h3>
+    </div>
+    <div class="modal-atn-body">
+      <p>Pegue los títulos de los episodios en el siguiente formato:</p>
+      <p><small>Episodio | Otro título | Idioma | País</small></p>
+      <textarea id="textareaPegarTitulos" placeholder="1 | Título alternativo | Español | Chile
+2 | Alternative title | Inglés | Estados Unidos"></textarea>
+    </div>
+    <div class="modal-atn-buttons">
+      <button type="button" class="btn-aceptar-pegar">Aceptar</button>
+      <button type="button" class="btn-cancelar-pegar">Cancelar</button>
+    </div>
+  </div>
+</div>
