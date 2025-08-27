@@ -41,6 +41,10 @@
               <div class="progress-step">5</div>
               <span class="step-label">Episodios</span>
             </div>
+            <div class="progress-slide" data-step="6">
+              <div class="progress-step">6</div>
+              <span class="step-label">Firma</span>
+            </div>
           </div>
         </div>
         <button class="nav-arrow next" aria-label="Siguiente">
@@ -84,6 +88,129 @@
             </div>
           </div>
         </section>
+        <section id="step-6" class="wizard-step">
+          <div class="subbloque">
+            <div class="subbloque-header-collapsible">
+              <h4>Firma Digital</h4>
+              <button type="button" class="btn-toggle-subbloque">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+            <div class="subbloque-content">
+              <!-- Instrucciones sobre la generación automática -->
+              <div class="firma-instrucciones">
+                <div class="info-box">
+                  <i class="fas fa-info-circle"></i>
+                  <div class="info-content">
+                    <h5>Generación Automática de Documento</h5>
+                    <p>Una vez completado el formulario y adjuntada su firma, se generará automáticamente un documento oficial con todos los datos ingresados. Este proceso se realizará mediante automatizaciones y el documento final incluirá su firma digital.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vista previa de la plantilla -->
+              <div class="plantilla-preview">
+                <h5><i class="fas fa-eye"></i> Vista Previa de la Plantilla</h5>
+                <div class="preview-container">
+                  <div class="preview-notice">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Esta es solo una vista previa de la plantilla. El documento final se generará y enviará a su correo automáticamente con sus datos.</span>
+                  </div>
+                  <div class="preview-document">
+                    <iframe src="assets/docs/DeclaracionAV.pdf" 
+                            width="100%" 
+                            height="600px" 
+                            style="border: 1px solid #ddd; border-radius: 8px;">
+                      <p>Su navegador no soporta la visualización de PDFs. 
+                         <a href="assets/docs/DeclaracionAV.pdf" target="_blank">Haga clic aquí para descargar el documento</a>
+                      </p>
+                    </iframe>
+                    <small style="display: block; margin-top: 10px; color: #666;">Documento de prueba - El documento final contendrá todos los datos del formulario junto con su firma digital</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sección de identificación y firma -->
+              <div class="firma-upload">
+                <h5><i class="fas fa-user-check"></i> Identificación del Declarante</h5>
+                
+                <!-- Instrucciones -->
+                <div class="firma-instructions">
+                  <div class="instruction-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="instruction-content">
+                      <p><strong>Información requerida:</strong></p>
+                      <ul>
+                        <li>Complete sus datos personales (Nombre completo y RUT)</li>
+                        <li>Adjunte su firma digital en formato PNG o JPG</li>
+                        <li>Esta información será incluida en el documento oficial de declaración</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campos de identificación -->
+                <div class="identification-fields">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="declarante-nombre">
+                        <i class="fas fa-user"></i> Nombre Completo *
+                      </label>
+                      <input type="text" 
+                             id="declarante-nombre" 
+                             name="declarante-nombre" 
+                             class="form-control" 
+                             placeholder="Ingrese su nombre completo"
+                             required>
+                      <div class="input-hint">Nombre y apellidos como aparecen en su cédula de identidad</div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="declarante-rut">
+                        <i class="fas fa-id-card"></i> RUT *
+                      </label>
+                      <input type="text" 
+                             id="declarante-rut" 
+                             name="declarante-rut" 
+                             class="form-control" 
+                             placeholder="12.345.678-9"
+                             maxlength="12"
+                             required>
+                      <div class="input-hint">Formato: 12.345.678-9 (con puntos y guión)</div>
+                      <div class="input-error" id="rut-error" style="display: none;">RUT inválido. Verifique el formato y dígito verificador.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campo de subida de firma -->
+                <div class="signature-section">
+                  <h6><i class="fas fa-signature"></i> Firma Digital *</h6>
+                  <div class="upload-container">
+                  <div class="file-input-wrapper">
+                    <input type="file" id="firma-file" name="firma" accept=".png,.jpg,.jpeg" class="file-input">
+                    <label for="firma-file" class="file-input-label">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span class="file-text">Seleccionar archivo de firma</span>
+                      <span class="file-formats">Formatos permitidos: PNG, JPG</span>
+                    </label>
+                  </div>
+                  <div class="file-preview" id="firma-preview" style="display:none;">
+                    <div class="preview-image-container">
+                      <img id="firma-image" src="" alt="Vista previa de la firma">
+                      <button type="button" class="btn-remove-file" onclick="removeSignatureFile()">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="file-info">
+                      <span class="file-name" id="firma-filename"></span>
+                      <span class="file-size" id="firma-filesize"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
       <div class="wizard-buttons">
         <button type="button" id="cancel-btn" class="btn btn-secondary">Cancelar</button>
@@ -94,39 +221,42 @@
     </form>
     <div id="form-message" class="form-message"></div>
 
-    <!-- Modal para gestionar participaciones (movido dentro del body principal) -->
-    <div id="modalParticipaciones" class="modal-atn" style="display:none;">
-      <div class="modal-atn-content" style="max-width:900px;">
-        <div class="modal-atn-header-green">
-          <h3>Gestionar participaciones</h3>
-        </div>
-        <div class="modal-atn-body">
-          <table class="tabla-participaciones">
-            <thead>
-              <tr>
-                <th>Rol</th>
-                <th>Autor</th>
-                <th>Porcentaje</th>
-                <th>Eliminar</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Filas dinámicas -->
-            </tbody>
-          </table>
-          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-outline-success btn-agregar-participacion">
-              <i class="fas fa-plus"></i> Agregar participación
-            </button>
-          </div>
-          <div id="participaciones-modal-error" class="form-message" style="color:#dc3545;margin-top:10px;"></div>
-          <div class="modal-atn-buttons">
-            <button type="button" class="btn btn-success btn-guardar-participaciones">Guardar cambios</button>
-<button type="button" class="btn btn-secondary btn-cerrar-participaciones">Cerrar</button>
-          </div>
-        </div>
+    <!-- Modal para gestionar participaciones (único) -->
+<div id="modalParticipaciones" class="modal-atn" style="display:none;">
+  <div class="modal-atn-content" style="max-width:900px;">
+    <div class="modal-atn-header-green">
+      <h3>Gestionar participaciones</h3>
+    </div>
+    <div class="modal-atn-body">
+      <div class="tabla-participaciones-container">
+        <table class="tabla-participaciones">
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Autor</th>
+              <th>Porcentaje</th>
+              <th>Eliminar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline-success btn-agregar-participacion">
+          <i class="fas fa-plus"></i> Agregar participación
+        </button>
+      </div>
+      <div id="participaciones-modal-error" class="form-message" style="color:#dc3545;margin-top:10px;"></div>
+      <div class="modal-atn-buttons">
+        <button type="button" class="btn btn-success btn-guardar-participaciones">Guardar cambios</button>
+        <button type="button" class="btn btn-secondary btn-cerrar-participaciones">Cerrar</button>
       </div>
     </div>
+  </div>
+</div>
+<!-- Fin modalParticipaciones único -->
   </main>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -208,38 +338,7 @@
   </div>
 </div>
 
-<!-- Modal para gestionar participaciones -->
-<div id="modalParticipaciones" class="modal-atn" style="display:none;">
-  <div class="modal-atn-content" style="max-width:900px;">
-    <div class="modal-atn-header-green">
-      <h3>Gestionar participaciones</h3>
-    </div>
-    <div class="modal-atn-body">
-      <table class="tabla-participaciones">
-        <thead>
-          <tr>
-            <th>Rol</th>
-            <th>Autor</th>
-            <th>Porcentaje</th>
-            <th>Eliminar</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Filas dinámicas -->
-        </tbody>
-      </table>
-      <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-        <button type="button" class="btn btn-outline-success btn-agregar-participacion">
-          <i class="fas fa-plus"></i> Agregar participación
-        </button>
-      </div>
-    </div>
-    <div class="modal-atn-buttons" style="margin-top:20px;">
-      <button type="button" class="btn btn-success btn-guardar-participaciones">Guardar cambios</button>
-      <button type="button" class="btn btn-secondary btn-cerrar-participaciones">Cerrar</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- Modal de ayuda para importación -->
 <div id="modalAyudaImportar" class="modal-atn" style="display:none;">
