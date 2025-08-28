@@ -1,1 +1,97 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario enviado</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="assets/solologo.png">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+        .success-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(9,113,55,0.08);
+            padding: 4rem 3.5rem;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        .success-icon {
+            font-size: 3rem;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+        .success-title {
+            font-size: 1.5rem;
+            color: #097137;
+            margin-bottom: 1rem;
+        }
+        .success-message {
+            color: #444;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .success-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #097137;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        .success-link:hover {
+            color: #28a745;
+        }
+        .social-icons a {
+            transition: transform 0.2s cubic-bezier(.4,2,.6,1);
+            display: inline-block;
+        }
+        .social-icons a:hover, .social-icons a:focus {
+            transform: scale(1.18);
+            z-index: 2;
+        }
+        .social-icons svg {
+            transition: transform 0.2s cubic-bezier(.4,2,.6,1);
+        }
+        .social-icons svg:hover {
+            transform: scale(1.18);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="success-title">¡Formulario enviado exitosamente!</div>
+        <div class="success-message">
+            Gracias por tu postulación.<br>
+            Pronto nos comunicaremos contigo para continuar el proceso.
+        </div>
+        <!-- Logo vinculado al sitio principal -->
+        <a href="https://www.atn.cl" class="success-logo-link" style="display:inline-block; margin-bottom:1.5rem; position:relative; z-index:2;">
+            <img src="assets/solologo-1.png" alt="Logo ATN" style="height:100px; width:auto; position:relative; top:0px; margin-bottom:-30px;">
+        </a>
+        <!-- Iconos de redes sociales -->
+        <div class="social-icons" style="margin-top:1.5rem;">
+            <a href="https://www.facebook.com/ATNChile" target="_blank" rel="noopener" title="Facebook" style="margin:0 8px; color:#3b5998;"><i class="fab fa-facebook fa-2x"></i></a>
+            <a href="https://twitter.com/atn_chile" target="_blank" rel="noopener" title="X (Twitter)" style="margin:0 8px; display:inline-block; vertical-align:middle;">
+                <svg width="32" height="32" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg" style="fill:#000; display:inline-block; vertical-align:middle; position:relative; top:-8px;">
+                  <path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm297.1 84L257.3 234.6 379.4 396H283.8L209 298.1 123.3 396H75.8l111-126.9L69.7 116h98l67.7 89.5L313.6 116h47.5zM323.3 367.6L153.4 142.9H125.1L296.9 367.6h26.3z"/>
+                </svg>
+            </a>
+            <a href="https://instagram.com/atn_chile" target="_blank" rel="noopener" title="Instagram" style="margin:0 8px; color:#e4405f;"><i class="fab fa-instagram fa-2x"></i></a>
+            <a href="https://www.linkedin.com/company/atn-sociedad-de-directores-audiovisuales-guionistas-y-dramaturgos" target="_blank" rel="noopener" title="LinkedIn" style="margin:0 8px; color:#0077b5;"><i class="fab fa-linkedin fa-2x"></i></a>
+            <a href="https://www.youtube.com/@atndirectoresavguionistasy6248" target="_blank" rel="noopener" title="YouTube" style="margin:0 8px; color:#ff0000;"><i class="fab fa-youtube fa-2x"></i></a>
+        </div>
+    </div>
+</body>
+</html>
