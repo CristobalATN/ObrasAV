@@ -1,7 +1,140 @@
+/* --- SECCIÓN DE NOTIFICACIÓN A PARTICIPANTES --- */
+.seccion-notificacion {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.notificacion-header h4 {
+  color: #097137;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.notificacion-header p {
+  margin-bottom: 10px;
+}
+
+.alerta-correos {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.lista-participantes-notificacion {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+}
+
+.lista-participantes-notificacion li {
+  padding: 8px 12px;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lista-participantes-notificacion li:last-child {
+  border-bottom: none;
+}
+
+/* Estilos para las opciones de autor en los selectores */
+.autor-option {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.autor-nombre {
+  font-weight: bold;
+}
+
+.autor-correo-info {
+  font-size: 0.85em;
+  margin-top: 2px;
+}
+
+.tiene-correo .autor-correo-info {
+  color: #097137;
+}
+
+.sin-correo .autor-correo-info {
+  color: #dc3545;
+}
+
+.nombre-participante {
+  font-weight: bold;
+  flex: 1;
+}
+
+.estado-correo {
+  width: 20px;
+  text-align: center;
+}
+
+.correo-participante {
+  flex: 2;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.tiene-correo .estado-correo {
+  color: #28a745;
+}
+
+.sin-correo .estado-correo {
+  color: #dc3545;
+}
+
+.sin-correo .correo-participante {
+  color: #dc3545;
+  font-style: italic;
+}
+
+.notificacion-footer {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-align: right;
+}
+
 /* --- MODAL PARTICIPACIONES --- */
+#modalParticipaciones.modal-atn {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.18);
+  align-items: center; justify-content: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Asegurar que el dropdown de Select2 aparezca por encima del modal */
+.select2-container--open .select2-dropdown {
+  z-index: 10000;
+}
+
 #modalParticipaciones .modal-atn-content {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 6px 32px rgba(9,113,55,0.13);
   max-width: 900px;
   width: 98vw;
+  margin: 0 auto;
+  padding: 0 0 24px 0;
+  overflow: visible;
 }
 
 #modalParticipaciones .btn-guardar-participaciones {
@@ -35,9 +168,13 @@
 }
 #modalParticipaciones .modal-atn-header-green {
   background: #097137;
+  border-radius: 18px 18px 0 0;
+  padding: 22px 36px 16px 36px;
   color: #fff;
-  padding: 18px 36px 12px 36px;
-  border-radius: 8px 8px 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 #modalParticipaciones .modal-atn-header-green h3 {
   margin: 0;
@@ -45,9 +182,10 @@
   font-weight: 600;
 }
 #modalParticipaciones .modal-atn-body {
-  padding: 24px 36px 0 36px;
+  padding: 32px 36px 0 36px;
   background: #fff;
-  border-radius: 0 0 8px 8px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 .tabla-participaciones-container {
   width: 100%;
@@ -55,6 +193,7 @@
   margin-bottom: 18px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-height: 50vh;
 }
 .tabla-participaciones {
   min-width: 700px;
@@ -922,6 +1061,34 @@ main {
 /* --- SECCIÓN FIRMA --- */
 .firma-instrucciones {
   margin-bottom: 2rem;
+}
+
+/* Estilos para el checkbox de declaración de veracidad */
+.declaration-checkbox-section {
+  margin-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1.5rem;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 4px;
+  min-width: 18px;
+  height: 18px;
+  accent-color: #097137;
+}
+
+.checkbox-container label {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+  font-weight: 500;
 }
 
 .info-box {
