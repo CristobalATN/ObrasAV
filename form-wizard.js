@@ -116,7 +116,7 @@ function saveEpisodiosData() {
   // Verificar si es obra serializada
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela', 'Serie documental'];
+  const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
   
   console.log('Formato seleccionado:', formatoSeleccionado);
@@ -129,16 +129,74 @@ function saveEpisodiosData() {
     const filasGenerales = document.querySelectorAll('.tabla-participaciones-modal tbody tr');
     console.log('Filas de participaciones generales encontradas:', filasGenerales.length);
     
-    filasGenerales.forEach((tr, index) => {
-      const participacion = {
-        rol: tr.querySelector('.rol-participacion')?.value || '',
-        autor: tr.querySelector('.autor-participacion')?.value || '',
-        porcentaje: tr.querySelector('.porcentaje-participacion')?.value || ''
-      };
-      console.log(`Participación general ${index}:`, participacion);
-      if (participacion.rol || participacion.autor || participacion.porcentaje) {
-        participacionesGenerales.push(participacion);
-      }
+    // Obtener la lista de socios para buscar correos
+    fetchJSON('socios.json').then(socios => {
+      filasGenerales.forEach((tr, index) => {
+        const rol = tr.querySelector('.rol-participacion')?.value || '';
+        const autor = tr.querySelector('.autor-participacion')?.value || '';
+        const porcentaje = tr.querySelector('.porcentaje-participacion')?.value || '';
+        
+        // Buscar el correo del autor en la lista de socios
+        const socioEncontrado = socios.find(socio => socio["Nombre completo"] === autor);
+        const correo = socioEncontrado ? socioEncontrado["Correo electrónico"] : '';
+        
+        const participacion = {
+          rol,
+          autor,
+          porcentaje,
+          correo
+        };
+        
+        console.log(`Participación general ${index}:`, participacion);
+        if (participacion.rol || participacion.autor || participacion.porcentaje) {
+          participacionesGenerales.push(participacion);
+        }
+      });
+      
+      // Para obras no serializadas, crear una entrada única en stepEpisodios
+      // que contenga las participaciones para que Power Automate pueda procesarla
+      window.formData.stepEpisodios = [{
+        temporada: '',
+        numero: '',
+        tituloEpisodio: '',
+        desdeEpisodio: '',
+        hastaEpisodio: '',
+        participaciones: participacionesGenerales,
+        titulosAlternativos: formData.episodiosTitulos?.titulosOtros || []
+      }];
+      
+      console.log('stepEpisodios para obra no serializada:', window.formData.stepEpisodios);
+      
+      // Actualizar la sección de notificación a participantes
+      actualizarSeccionNotificacion();
+    }).catch(error => {
+      console.error('Error al obtener socios para correos:', error);
+      // Si hay error, guardar sin correos
+      filasGenerales.forEach((tr, index) => {
+        const participacion = {
+          rol: tr.querySelector('.rol-participacion')?.value || '',
+          autor: tr.querySelector('.autor-participacion')?.value || '',
+          porcentaje: tr.querySelector('.porcentaje-participacion')?.value || '',
+          correo: ''
+        };
+        console.log(`Participación general ${index}:`, participacion);
+        if (participacion.rol || participacion.autor || participacion.porcentaje) {
+          participacionesGenerales.push(participacion);
+        }
+      });
+      
+      // Para obras no serializadas, crear una entrada única en stepEpisodios
+      window.formData.stepEpisodios = [{
+        temporada: '',
+        numero: '',
+        tituloEpisodio: '',
+        desdeEpisodio: '',
+        hastaEpisodio: '',
+        participaciones: participacionesGenerales,
+        titulosAlternativos: formData.episodiosTitulos?.titulosOtros || []
+      }];
+      
+      console.log('stepEpisodios para obra no serializada (sin correos):', window.formData.stepEpisodios);
     });
     
     // Para obras no serializadas, crear una entrada única en stepEpisodios
@@ -156,9 +214,32 @@ function saveEpisodiosData() {
     console.log('stepEpisodios para obra no serializada:', window.formData.stepEpisodios);
   } else {
     console.log('Obra serializada - Guardando episodios normalmente');
-    // Guardar episodios en el formato esperado por el esquema
-    window.formData.stepEpisodios = episodiosParaEsquema;
-    console.log('Episodios guardados en stepEpisodios:', window.formData.stepEpisodios);
+    // Obtener la lista de socios para buscar correos
+    fetchJSON('socios.json').then(socios => {
+      // Añadir correos a las participaciones de cada episodio
+      episodiosParaEsquema.forEach(episodio => {
+        if (episodio.participaciones && episodio.participaciones.length > 0) {
+          episodio.participaciones = episodio.participaciones.map(participacion => {
+            // Buscar el correo del autor en la lista de socios
+            const socioEncontrado = socios.find(socio => socio["Nombre completo"] === participacion.autor);
+            const correo = socioEncontrado ? socioEncontrado["Correo electrónico"] : '';
+            return { ...participacion, correo };
+          });
+        }
+      });
+      
+      // Guardar episodios en el formato esperado por el esquema
+      window.formData.stepEpisodios = episodiosParaEsquema;
+      console.log('Episodios guardados en stepEpisodios con correos:', window.formData.stepEpisodios);
+      
+      // Actualizar la sección de notificación a participantes
+      actualizarSeccionNotificacion();
+    }).catch(error => {
+      console.error('Error al obtener socios para correos:', error);
+      // Si hay error, guardar sin correos
+      window.formData.stepEpisodios = episodiosParaEsquema;
+      console.log('Episodios guardados en stepEpisodios sin correos:', window.formData.stepEpisodios);
+    });
   }
   
   console.log('=== FIN saveEpisodiosData ===');
@@ -172,6 +253,77 @@ const fetchJSON = async (file) => {
   const res = await fetch(`assets/${file}`);
   return res.json();
 };
+
+// Función para actualizar la sección de notificación a participantes
+function actualizarSeccionNotificacion() {
+  const seccionNotificacion = document.getElementById('seccion-notificacion-participantes');
+  if (!seccionNotificacion) return;
+  
+  // Obtener todos los participantes de formData
+  const participantes = [];
+  
+  // Añadir participaciones de obras no serializadas
+  if (formData.participaciones && formData.participaciones.length > 0) {
+    formData.participaciones.forEach(p => {
+      if (p.autor && !participantes.some(existente => existente.autor === p.autor)) {
+        participantes.push(p);
+      }
+    });
+  }
+  
+  // Añadir participaciones de episodios
+  if (formData.stepEpisodios && formData.stepEpisodios.length > 0) {
+    formData.stepEpisodios.forEach(episodio => {
+      if (episodio.participaciones && episodio.participaciones.length > 0) {
+        episodio.participaciones.forEach(p => {
+          if (p.autor && !participantes.some(existente => existente.autor === p.autor)) {
+            participantes.push(p);
+          }
+        });
+      }
+    });
+  }
+  
+  // Generar HTML para la lista de participantes
+  let listaHTML = '';
+  let conCorreo = 0;
+  let sinCorreo = 0;
+  
+  participantes.forEach(p => {
+    const tieneCorreo = p.correo && p.correo.trim() !== '';
+    const claseCorreo = tieneCorreo ? 'tiene-correo' : 'sin-correo';
+    const iconoCorreo = tieneCorreo ? '✓' : '✗';
+    const mensajeCorreo = tieneCorreo ? p.correo : 'No se encontró correo';
+    
+    listaHTML += `<li class="${claseCorreo}">
+      <span class="nombre-participante">${p.autor}</span>
+      <span class="estado-correo">${iconoCorreo}</span>
+      <span class="correo-participante">${mensajeCorreo}</span>
+    </li>`;
+    
+    if (tieneCorreo) conCorreo++;
+    else sinCorreo++;
+  });
+  
+  // Actualizar el contenido de la sección
+  const mensajeInicial = sinCorreo > 0 ?
+    `<div class="alerta-correos">Se encontraron ${sinCorreo} participantes sin correo electrónico. Se recomienda notificarlos manualmente mientras se actualizan los datos en ATN.</div>` :
+    '';
+  
+  seccionNotificacion.innerHTML = `
+    <div class="notificacion-header">
+      <h4>Notificación a participantes</h4>
+      <p>Al enviar este formulario, se notificará automáticamente a los siguientes participantes:</p>
+      ${mensajeInicial}
+    </div>
+    <ul class="lista-participantes-notificacion">
+      ${listaHTML || '<li>No hay participantes para notificar</li>'}
+    </ul>
+    <div class="notificacion-footer">
+      <p>Total: ${participantes.length} participantes (${conCorreo} con correo, ${sinCorreo} sin correo)</p>
+    </div>
+  `;
+}
 
 // Inicializar el carrusel de progreso
 function inicializarCarruselProgreso() {
@@ -766,6 +918,7 @@ function saveStepFirmaData() {
   // Guardar datos del declarante
   const nombreDeclarante = document.getElementById('declarante-nombre')?.value || '';
   const rutDeclarante = document.getElementById('declarante-rut')?.value || '';
+  const correoDeclarante = document.getElementById('declarante-correo')?.value || '';
   
   // Calcular fecha de declaración automáticamente (invisible para el usuario)
   // Enviar solo la fecha en formato YYYY-MM-DD para cumplir formato date requerido por Power Automate
@@ -786,14 +939,21 @@ function saveStepFirmaData() {
     formData.declarante = {};
   }
   
+  // Obtener estado del checkbox de declaración de veracidad
+  const declaracionVeracidad = document.getElementById('declaracion-veracidad')?.checked || false;
+  
   formData.declarante.nombre = nombreDeclarante;
   formData.declarante.rut = rutDeclarante;
+  formData.declarante.correoDeclarante = correoDeclarante; // Nuevo campo de correo
   formData.declarante.fechaDeclaracion = fechaDeclaracion;
+  formData.declarante.declaracionVeracidad = declaracionVeracidad; // Nuevo campo para el checkbox
   
   console.log('Datos del declarante guardados:', {
     nombre: nombreDeclarante,
     rut: rutDeclarante,
-    fechaDeclaracion: fechaDeclaracion
+    correoDeclarante: correoDeclarante,
+    fechaDeclaracion: fechaDeclaracion,
+    declaracionVeracidad: declaracionVeracidad
   });
 }
 
@@ -1509,6 +1669,36 @@ function validarCamposNombres() {
 }
 
 // Envío simulado
+// Función auxiliar para filtrar participantes sin correo
+function filtrarParticipantesSinCorreo(formDataToFilter) {
+  // Crear una copia profunda para no modificar el original
+  const filteredData = JSON.parse(JSON.stringify(formDataToFilter));
+  
+  // Filtrar participaciones principales
+  if (filteredData.participaciones && Array.isArray(filteredData.participaciones)) {
+    filteredData.participaciones = filteredData.participaciones.filter(p => 
+      p.correo && p.correo.trim() !== ''
+    );
+  }
+  
+  // Filtrar participaciones en episodios
+  if (filteredData.stepEpisodios && Array.isArray(filteredData.stepEpisodios)) {
+    filteredData.stepEpisodios = filteredData.stepEpisodios.map(episodio => {
+      if (episodio.participaciones && Array.isArray(episodio.participaciones)) {
+        return {
+          ...episodio,
+          participaciones: episodio.participaciones.filter(p => 
+            p.correo && p.correo.trim() !== ''
+          )
+        };
+      }
+      return episodio;
+    });
+  }
+  
+  return filteredData;
+}
+
 async function submitForm(e) {
   e.preventDefault();
   if (!validateStep1()) return;
@@ -1530,16 +1720,20 @@ async function submitForm(e) {
     console.log('NO llamando saveEpisodiosData desde submitForm para preservar participaciones existentes');
   }
   
+  // Filtrar participantes sin correo antes del envío
+  const formDataParaEnvio = filtrarParticipantesSinCorreo(window.formData);
+  
   document.getElementById('submit-btn').disabled = true;
   showSuccessMessage('Enviando declaración...', 'loading');
   // DEPURACIÓN: Mostrar el JSON que se enviará
-  console.log('Payload enviado:', JSON.stringify(window.formData, null, 2));
+  console.log('Payload original:', JSON.stringify(window.formData, null, 2));
+  console.log('Payload filtrado enviado:', JSON.stringify(formDataParaEnvio, null, 2));
   try {
     await new Promise(r => setTimeout(r, 1200)); // Simula espera
     const response = await fetch('https://default0c13096209bc40fc8db89d043ff625.1a.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8b2f009b7f0c49a3be2f5b98d4f730d6/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cN4MgBD-NapZYysEoECxfSNQi8rI56haXMVmq3qAdGs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(window.formData)
+      body: JSON.stringify(formDataParaEnvio)
     });
     // DEPURACIÓN: Mostrar status y respuesta
     console.log('Status:', response.status);
@@ -1619,7 +1813,7 @@ async function renderStepParticipaciones(container) {
   // Verificar si la obra es serializada
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela', 'Serie documental'];
+  const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
 
   if (esSerializada) {
@@ -1766,6 +1960,14 @@ function validarParticipaciones() {
 // Función para agregar fila de participación en tabla
 function agregarFilaParticipacion() {
   const tbody = document.querySelector('.tabla-participaciones tbody');
+  const filas = tbody.querySelectorAll('tr');
+  
+  // Verificar si ya hay 10 participaciones
+  if (filas.length >= 10) {
+    alert('No se pueden agregar más de 10 participaciones.');
+    return;
+  }
+  
   const filaId = Date.now() + Math.floor(Math.random() * 1000);
   
   const fila = document.createElement('tr');
@@ -1828,14 +2030,36 @@ function agregarFilaParticipacion() {
             transport: function(params, success, failure) {
               fetchJSON('socios.json').then(sociosRaw => {
                 const term = params.data.q ? params.data.q.toLowerCase() : '';
-                const autores = sociosRaw
-                  .map(a => a["Nombre completo"])
-                  .filter(nombre => nombre && nombre.toLowerCase().includes(term));
-                success({ results: autores.map(nombre => ({ id: nombre, text: nombre })) });
+                const autoresData = sociosRaw
+                  .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
+                  .map(socio => {
+                    // Verificar si tiene correo
+                    const tieneCorreo = socio["Correo electrónico"] && socio["Correo electrónico"].trim() !== '';
+                    const iconoCorreo = tieneCorreo ? '✓' : '✗';
+                    const textoCorreo = tieneCorreo ? socio["Correo electrónico"] : 'Sin correo';
+                    
+                    return { 
+                      id: socio["Nombre completo"], 
+                      text: socio["Nombre completo"],
+                      correo: socio["Correo electrónico"] || '',
+                      tieneCorreo: tieneCorreo,
+                      html: `<div class="autor-option ${tieneCorreo ? 'tiene-correo' : 'sin-correo'}">
+                              <span class="autor-nombre">${socio["Nombre completo"]}</span>
+                              <span class="autor-correo-info">${iconoCorreo} ${textoCorreo}</span>
+                            </div>`
+                    };
+                  });
+                success({ results: autoresData });
               }).catch(failure);
             },
             processResults: function(data) {
               return { results: data.results };
+            },
+            templateResult: function(data) {
+              if (data.html) {
+                return $(data.html);
+              }
+              return data.text;
             }
           },
           language: {
@@ -1913,18 +2137,43 @@ function saveParticipacionesData() {
   const filas = document.querySelectorAll('.tabla-participaciones tbody tr');
   const participaciones = [];
   
-  filas.forEach(fila => {
-    const rol = fila.querySelector('.rol-select')?.value || '';
-    const autor = fila.querySelector('.autor-select')?.value || '';
-    const porcentaje = fila.querySelector('input[type="number"]')?.value || '';
+  // Obtener la lista de socios para buscar correos
+  fetchJSON('socios.json').then(socios => {
+    filas.forEach(fila => {
+      const rol = fila.querySelector('.rol-select')?.value || '';
+      const autor = fila.querySelector('.autor-select')?.value || '';
+      const porcentaje = fila.querySelector('input[type="number"]')?.value || '';
+      
+      if (rol && autor && porcentaje) {
+        // Buscar el correo del autor en la lista de socios
+        const socioEncontrado = socios.find(socio => socio["Nombre completo"] === autor);
+        const correo = socioEncontrado ? socioEncontrado["Correo electrónico"] : '';
+        
+        participaciones.push({ rol, autor, porcentaje, correo });
+      }
+    });
     
-    if (rol && autor && porcentaje) {
-      participaciones.push({ rol, autor, porcentaje });
-    }
+    formData.participaciones = participaciones;
+    console.log('Participaciones guardadas con correos:', participaciones);
+    
+    // Actualizar la sección de notificación a participantes
+    actualizarSeccionNotificacion();
+  }).catch(error => {
+    console.error('Error al obtener socios para correos:', error);
+    // Si hay error, guardar sin correos
+    filas.forEach(fila => {
+      const rol = fila.querySelector('.rol-select')?.value || '';
+      const autor = fila.querySelector('.autor-select')?.value || '';
+      const porcentaje = fila.querySelector('input[type="number"]')?.value || '';
+      
+      if (rol && autor && porcentaje) {
+        participaciones.push({ rol, autor, porcentaje, correo: '' });
+      }
+    });
+    
+    formData.participaciones = participaciones;
+    console.log('Participaciones guardadas sin correos:', participaciones);
   });
-  
-  formData.participaciones = participaciones;
-  console.log('Participaciones guardadas:', participaciones);
 }
 
 // Renderizar la sección de Datos Técnicos
@@ -2005,7 +2254,7 @@ async function renderStepEpisodios(container) {
   // Intentar obtener el valor del campo formato directamente del DOM
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela', 'Serie documental'];
+  const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
   
   console.log('Debug episodios:', {
@@ -2066,7 +2315,7 @@ function validateStepEpisodios() {
   // Intentar obtener el valor del campo formato directamente del DOM
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela', 'Serie documental'];
+  const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
   
   // Si no es serializada, no hay nada que validar
@@ -2964,6 +3213,13 @@ function agregarLineaParticipacion(bloqueId) {
   const lineasContainer = bloque.querySelector('.lineas-participacion');
   if (!lineasContainer) return;
   
+  // Verificar si ya hay 10 participaciones
+  const lineasExistentes = lineasContainer.querySelectorAll('.linea-participacion');
+  if (lineasExistentes.length >= 10) {
+    alert('No se pueden agregar más de 10 participaciones por episodio.');
+    return;
+  }
+  
   const lineaHTML = `
     <div class="linea-participacion">
       <div class="form-row">
@@ -3407,6 +3663,14 @@ function restaurarParticipacionesModal() {
 function agregarFilaParticipacionModal() {
   const tbody = document.querySelector('#modalParticipaciones .tabla-participaciones tbody');
   if (!tbody) return;
+  
+  // Verificar si ya hay 10 participaciones
+  const filas = tbody.querySelectorAll('tr');
+  if (filas.length >= 10) {
+    alert('No se pueden agregar más de 10 participaciones.');
+    return;
+  }
+  
   // Obtener roles y autores desde los JSON
   Promise.all([
     fetch('assets/rol.json').then(r => r.json()),
@@ -3449,14 +3713,36 @@ function agregarFilaParticipacionModal() {
           transport: function(params, success, failure) {
             fetchJSON('socios.json').then(sociosRaw => {
               const term = params.data.q ? params.data.q.toLowerCase() : '';
-              const autores = sociosRaw
-                .map(a => a["Nombre completo"])
-                .filter(nombre => nombre && nombre.toLowerCase().includes(term));
-              success({ results: autores.map(nombre => ({ id: nombre, text: nombre })) });
+              const autoresData = sociosRaw
+                .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
+                .map(socio => {
+                  // Verificar si tiene correo
+                  const tieneCorreo = socio["Correo electrónico"] && socio["Correo electrónico"].trim() !== '';
+                  const iconoCorreo = tieneCorreo ? '✓' : '✗';
+                  const textoCorreo = tieneCorreo ? socio["Correo electrónico"] : 'Sin correo';
+                  
+                  return { 
+                    id: socio["Nombre completo"], 
+                    text: socio["Nombre completo"],
+                    correo: socio["Correo electrónico"] || '',
+                    tieneCorreo: tieneCorreo,
+                    html: `<div class="autor-option ${tieneCorreo ? 'tiene-correo' : 'sin-correo'}">
+                            <span class="autor-nombre">${socio["Nombre completo"]}</span>
+                            <span class="autor-correo-info">${iconoCorreo} ${textoCorreo}</span>
+                          </div>`
+                  };
+                });
+              success({ results: autoresData });
             }).catch(failure);
           },
           processResults: function(data) {
             return { results: data.results };
+          },
+          templateResult: function(data) {
+            if (data.html) {
+              return $(data.html);
+            }
+            return data.text;
           }
         },
         language: {
@@ -3777,7 +4063,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (currentStep === 3) {
       const formatoField = document.getElementById('formato');
       const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-      const obrasSerializadas = ['Serie', 'Telenovela', 'Serie documental'];
+      const obrasSerializadas = ['Serie', 'Telenovela'];
       const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
       
       console.log('Formato seleccionado:', formatoSeleccionado, 'Es serializada:', esSerializada);
@@ -4094,6 +4380,18 @@ function validateStepFirma() {
     clearError(rutInput.parentElement);
   }
   
+  // Validar correo electrónico
+  const correoInput = document.getElementById('declarante-correo');
+  if (!correoInput.value.trim()) {
+    showError(correoInput.parentElement, 'Por favor, ingrese su correo electrónico.');
+    isValid = false;
+  } else if (!validarCorreo(correoInput.value)) {
+    showError(correoInput.parentElement, 'Correo electrónico inválido. Verifique el formato.');
+    isValid = false;
+  } else {
+    clearError(correoInput.parentElement);
+  }
+  
   // Validar firma
   const fileInput = document.getElementById('firma-file');
   if (!fileInput.files || fileInput.files.length === 0) {
@@ -4101,6 +4399,15 @@ function validateStepFirma() {
     isValid = false;
   } else {
     clearError(fileInput.parentElement);
+  }
+  
+  // Validar checkbox de declaración de veracidad
+  const declaracionCheckbox = document.getElementById('declaracion-veracidad');
+  if (!declaracionCheckbox.checked) {
+    showError(declaracionCheckbox.parentElement.parentElement, 'Debe aceptar la declaración de veracidad.');
+    isValid = false;
+  } else {
+    clearError(declaracionCheckbox.parentElement.parentElement);
   }
   
   return isValid;
@@ -4133,6 +4440,13 @@ function validarRutChileno(rut) {
   const dvCalculado = resto === 0 ? '0' : resto === 1 ? 'k' : (11 - resto).toString();
   
   return dv === dvCalculado;
+}
+
+// Función para validar correo electrónico
+function validarCorreo(correo) {
+  // Expresión regular para validar formato de correo electrónico
+  const regexCorreo = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  return regexCorreo.test(correo);
 }
 
 // Función para formatear RUT mientras se escribe
