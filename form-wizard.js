@@ -1669,20 +1669,43 @@ function validarCamposNombres() {
 }
 
 // Envío simulado
-// Función auxiliar para filtrar participantes sin correo
+// Función auxiliar para filtrar participantes sin correo y eliminar duplicados
 function filtrarParticipantesSinCorreo(formDataToFilter) {
   // Crear una copia profunda para no modificar el original
   const filteredData = JSON.parse(JSON.stringify(formDataToFilter));
   
-  // Filtrar participaciones principales
+  // Crear un conjunto de correos únicos para evitar duplicados
+  const correosUnicos = new Set();
+  
+  // Recolectar correos de participaciones principales
   if (filteredData.participaciones && Array.isArray(filteredData.participaciones)) {
+    // Filtrar participaciones sin correo
     filteredData.participaciones = filteredData.participaciones.filter(p => 
       p.correo && p.correo.trim() !== ''
     );
+    
+    // Añadir correos al conjunto de únicos
+    filteredData.participaciones.forEach(p => {
+      if (p.correo && p.correo.trim() !== '') {
+        correosUnicos.add(p.correo.trim());
+      }
+    });
   }
   
-  // Filtrar participaciones en episodios
+  // Filtrar participaciones en episodios y recolectar correos únicos
   if (filteredData.stepEpisodios && Array.isArray(filteredData.stepEpisodios)) {
+    // Recolectar todos los correos únicos de episodios
+    filteredData.stepEpisodios.forEach(episodio => {
+      if (episodio.participaciones && Array.isArray(episodio.participaciones)) {
+        episodio.participaciones.forEach(p => {
+          if (p.correo && p.correo.trim() !== '') {
+            correosUnicos.add(p.correo.trim());
+          }
+        });
+      }
+    });
+    
+    // Mantener la estructura original de episodios para otros propósitos
     filteredData.stepEpisodios = filteredData.stepEpisodios.map(episodio => {
       if (episodio.participaciones && Array.isArray(episodio.participaciones)) {
         return {
@@ -1695,6 +1718,10 @@ function filtrarParticipantesSinCorreo(formDataToFilter) {
       return episodio;
     });
   }
+  
+  // Crear una variable CorreosUnicos para Power Automate
+  filteredData.CorreosUnicos = Array.from(correosUnicos);
+  console.log('Correos únicos para notificación:', filteredData.CorreosUnicos);
   
   return filteredData;
 }
