@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="styles.css">
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="assets/solologo.png">
 </head>
 <body>
   <header class="header">
-    <img src="assets/Logo-Fondo-Transparente@3x(1).png" alt="Logo organización" class="logo">
+    <a href="https://atn.cl" target="_blank"><img src="assets/Logo-Fondo-Transparente@3x(1).png" alt="Logo organización" class="logo"></a>
     <h1>Declaración de Obras Audiovisuales</h1>
   </header>
   <main>
@@ -180,6 +181,23 @@
                       <div class="input-error" id="rut-error" style="display: none;">RUT inválido. Verifique el formato y dígito verificador.</div>
                     </div>
                   </div>
+                  
+                  <!-- Nueva fila para el correo electrónico -->
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="declarante-correo">
+                        <i class="fas fa-envelope"></i> Correo Electrónico *
+                      </label>
+                      <input type="email" 
+                             id="declarante-correo" 
+                             name="declarante-correo" 
+                             class="form-control" 
+                             placeholder="ejemplo@correo.com"
+                             required>
+                      <div class="input-hint">Se enviará confirmación a este correo</div>
+                      <div class="input-error" id="correo-error" style="display: none;">Correo electrónico inválido.</div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Campo de subida de firma -->
@@ -204,6 +222,34 @@
                     <div class="file-info">
                       <span class="file-name" id="firma-filename"></span>
                       <span class="file-size" id="firma-filesize"></span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Checkbox de declaración de veracidad -->
+                <div class="declaration-checkbox-section">
+                  <div class="form-group">
+                    <div class="checkbox-container">
+                      <input type="checkbox" id="declaracion-veracidad" name="declaracion-veracidad" required>
+                      <label for="declaracion-veracidad">
+                        El(los) firmante(s) declara(n) que los datos consignados en este formulario son ciertos y correctos y se responsabiliza(n) ante terceros de la exactitud de lo aquí declarado.
+                      </label>
+                    </div>
+                    <div class="input-error" id="declaracion-error" style="display: none;">Debe aceptar la declaración de veracidad.</div>
+                  </div>
+                  
+                  <!-- Sección de notificación a participantes -->
+                  <div class="form-group mt-4">
+                    <div id="seccion-notificacion-participantes" class="seccion-notificacion">
+                      <!-- Esta sección se llenará dinámicamente con JavaScript -->
+                      <div class="notificacion-header">
+                        <h4>Notificación a participantes</h4>
+                        <p>Al enviar este formulario, se notificará automáticamente a los siguientes participantes:</p>
+                        <div class="alerta-correos">Puede haber autores sin correo electrónico actualizado. Se recomienda notificarlos manualmente mientras se actualizan los datos en ATN.</div>
+                      </div>
+                      <ul class="lista-participantes-notificacion">
+                        <li>No hay participantes para notificar</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -249,7 +295,7 @@
         </button>
       </div>
       <div id="participaciones-modal-error" class="form-message" style="color:#dc3545;margin-top:10px;"></div>
-      <div class="modal-atn-buttons">
+      <div class="modal-atn-buttons" style="display: flex; justify-content: flex-end; gap: 16px; padding: 0 36px; margin-top: 24px;">
         <button type="button" class="btn btn-success btn-guardar-participaciones">Guardar cambios</button>
         <button type="button" class="btn btn-secondary btn-cerrar-participaciones">Cerrar</button>
       </div>
