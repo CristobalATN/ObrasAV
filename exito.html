@@ -38,6 +38,30 @@
             font-size: 1.1rem;
             margin-bottom: 2rem;
         }
+        @media (max-width: 768px) {
+            .success-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            .success-title {
+                font-size: 1.3rem;
+            }
+            .success-message {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .success-container {
+                padding: 1.5rem 1rem;
+            }
+            .success-title {
+                font-size: 1.2rem;
+            }
+            .btn {
+                font-size: 0.9rem !important;
+                padding: 10px 16px !important;
+            }
+        }
         .success-link {
             display: inline-block;
             margin-top: 1rem;
@@ -47,6 +71,11 @@
         }
         .success-link:hover {
             color: #28a745;
+        }
+        .btn:hover {
+            background: #28a745 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(9,113,55,0.3);
         }
         .social-icons a {
             transition: transform 0.2s cubic-bezier(.4,2,.6,1);
@@ -75,6 +104,18 @@
             Gracias por tu postulación.<br>
             Pronto nos comunicaremos contigo para continuar el proceso.
         </div>
+        
+        <!-- Mensaje y botón para declarar otra obra -->
+        <div style="margin: 2rem 0; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #097137;">
+            <p style="color: #097137; font-weight: 500; margin-bottom: 1rem; font-size: 1.1rem;">
+                ¿Quieres declarar otra obra audiovisual? Haz clic en el siguiente botón:
+            </p>
+            <a href="index.html" class="btn" style="display: inline-block; background: #097137; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: all 0.3s ease; width: 100%; max-width: 280px; text-align: center; box-sizing: border-box;">
+                <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
+                Declarar otra obra AV
+            </a>
+        </div>
+        
         <!-- Logo vinculado al sitio principal -->
         <a href="https://www.atn.cl" class="success-logo-link" style="display:inline-block; margin-bottom:1.5rem; position:relative; z-index:2;">
             <img src="assets/solologo-1.png" alt="Logo ATN" style="height:100px; width:auto; position:relative; top:0px; margin-bottom:-30px;">
@@ -94,3 +135,4 @@
     </div>
 </body>
 </html>
+
