@@ -28,27 +28,27 @@ function saveEpisodiosData() {
   const bloques = document.querySelectorAll('.bloque-episodios-colapsable');
   console.log('Bloques encontrados:', bloques.length);
   let bloquesData = [];
-  
+
   bloques.forEach((bloque, bloqueIndex) => {
     console.log(`Procesando bloque ${bloqueIndex}:`, bloque);
     const temporada = bloque.querySelector('.temporada')?.value || '';
     const desdeEpisodio = bloque.querySelector('.desde-episodio')?.value || '';
     const hastaEpisodio = bloque.querySelector('.hasta-episodio')?.value || '';
     console.log(`Bloque ${bloqueIndex} - Temporada: ${temporada}, Desde: ${desdeEpisodio}, Hasta: ${hastaEpisodio}`);
-    
+
     // Obtener el ID del bloque desde el atributo id
     const bloqueId = bloque.id.replace('bloque-episodios-colapsable-', '');
     console.log(`Bloque ${bloqueIndex} - ID: ${bloqueId}`);
-    
+
     // Obtener participaciones del almacenamiento por bloque
     let participacionesBloque = participacionesPorBloque[bloqueId] || [];
     console.log(`Bloque ${bloqueIndex} - Participaciones desde participacionesPorBloque:`, participacionesBloque);
-    
+
     // Recopilar episodios del bloque
     const episodios = bloque.querySelectorAll('.episodio-item');
     console.log(`Episodios en bloque ${bloqueIndex}:`, episodios.length);
     let episodiosDelBloque = [];
-    
+
     episodios.forEach((epi, epiIndex) => {
       console.log(`Procesando episodio ${epiIndex}:`, epi);
       const episodioObj = {
@@ -59,7 +59,7 @@ function saveEpisodiosData() {
       console.log(`Episodio ${epiIndex} objeto final:`, episodioObj);
       episodiosDelBloque.push(episodioObj);
     });
-    
+
     // Crear objeto del bloque
     const bloqueObj = {
       temporada,
@@ -71,24 +71,24 @@ function saveEpisodiosData() {
     console.log(`Bloque ${bloqueIndex} objeto final:`, bloqueObj);
     bloquesData.push(bloqueObj);
   });
-  
+
   console.log('Bloques data final:', bloquesData);
-  
+
   // Transformar bloques al formato esperado por el esquema
   let episodiosParaEsquema = [];
   bloquesData.forEach((bloque, bloqueIndex) => {
     // Obtener el ID del bloque para buscar títulos
     const bloqueElement = document.querySelectorAll('.bloque-episodios-colapsable')[bloqueIndex];
     const bloqueId = bloqueElement ? bloqueElement.id.replace('bloque-episodios-colapsable-', '') : null;
-    
+
     bloque.episodios.forEach(episodio => {
       // Buscar títulos alternativos del almacenamiento por bloque
       const titulosDelBloque = titulosPorBloque[bloqueId] || [];
-      const titulosAlternativos = titulosDelBloque.filter(titulo => 
+      const titulosAlternativos = titulosDelBloque.filter(titulo =>
         titulo.episodio === episodio.numero
       );
       console.log(`Títulos alternativos para episodio ${episodio.numero} del bloque ${bloqueId}:`, titulosAlternativos);
-      
+
       // Generar título automático si no hay título ingresado
       let tituloFinal = episodio.titulo || '';
       if (!tituloFinal.trim()) {
@@ -97,7 +97,7 @@ function saveEpisodiosData() {
         const episodioFormateado = String(episodio.numero).padStart(3, '0');
         tituloFinal = `T${temporadaFormateada}E${episodioFormateado}`;
       }
-      
+
       const episodioParaEsquema = {
         temporada: bloque.temporada,
         numero: episodio.numero || '',
@@ -108,51 +108,51 @@ function saveEpisodiosData() {
         titulosAlternativos: titulosAlternativos || []
       };
       episodiosParaEsquema.push(episodioParaEsquema);
-      });
     });
-  
+  });
+
   console.log('Episodios transformados para esquema:', episodiosParaEsquema);
-  
+
   // Verificar si es obra serializada
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
   const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
-  
+
   console.log('Formato seleccionado:', formatoSeleccionado);
   console.log('Es obra serializada:', esSerializada);
-  
+
   if (!esSerializada) {
     console.log('Obra NO serializada - Creando entrada única en stepEpisodios');
     // Recopilar participaciones generales del modal principal
     const participacionesGenerales = [];
     const filasGenerales = document.querySelectorAll('.tabla-participaciones-modal tbody tr');
     console.log('Filas de participaciones generales encontradas:', filasGenerales.length);
-    
+
     // Obtener la lista de socios para buscar correos
     fetchJSON('socios.json').then(socios => {
       filasGenerales.forEach((tr, index) => {
         const rol = tr.querySelector('.rol-participacion')?.value || '';
         const autor = tr.querySelector('.autor-participacion')?.value || '';
         const porcentaje = tr.querySelector('.porcentaje-participacion')?.value || '';
-        
+
         // Buscar el correo del autor en la lista de socios
         const socioEncontrado = socios.find(socio => socio["Nombre completo"] === autor);
         const correo = socioEncontrado ? socioEncontrado["Correo electrónico"] : '';
-        
+
         const participacion = {
           rol,
           autor,
           porcentaje,
           correo
         };
-        
+
         console.log(`Participación general ${index}:`, participacion);
         if (participacion.rol || participacion.autor || participacion.porcentaje) {
           participacionesGenerales.push(participacion);
         }
       });
-      
+
       // Para obras no serializadas, crear una entrada única en stepEpisodios
       // que contenga las participaciones para que Power Automate pueda procesarla
       window.formData.stepEpisodios = [{
@@ -164,9 +164,9 @@ function saveEpisodiosData() {
         participaciones: participacionesGenerales,
         titulosAlternativos: formData.episodiosTitulos?.titulosOtros || []
       }];
-      
+
       console.log('stepEpisodios para obra no serializada:', window.formData.stepEpisodios);
-      
+
       // Actualizar la sección de notificación a participantes
       actualizarSeccionNotificacion();
     }).catch(error => {
@@ -184,7 +184,7 @@ function saveEpisodiosData() {
           participacionesGenerales.push(participacion);
         }
       });
-      
+
       // Para obras no serializadas, crear una entrada única en stepEpisodios
       window.formData.stepEpisodios = [{
         temporada: '',
@@ -195,10 +195,10 @@ function saveEpisodiosData() {
         participaciones: participacionesGenerales,
         titulosAlternativos: formData.episodiosTitulos?.titulosOtros || []
       }];
-      
+
       console.log('stepEpisodios para obra no serializada (sin correos):', window.formData.stepEpisodios);
     });
-    
+
     // Para obras no serializadas, crear una entrada única en stepEpisodios
     // que contenga las participaciones para que Power Automate pueda procesarla
     window.formData.stepEpisodios = [{
@@ -210,7 +210,7 @@ function saveEpisodiosData() {
       participaciones: participacionesGenerales,
       titulosAlternativos: formData.episodiosTitulos?.titulosOtros || []
     }];
-    
+
     console.log('stepEpisodios para obra no serializada:', window.formData.stepEpisodios);
   } else {
     console.log('Obra serializada - Guardando episodios normalmente');
@@ -227,11 +227,11 @@ function saveEpisodiosData() {
           });
         }
       });
-      
+
       // Guardar episodios en el formato esperado por el esquema
       window.formData.stepEpisodios = episodiosParaEsquema;
       console.log('Episodios guardados en stepEpisodios con correos:', window.formData.stepEpisodios);
-      
+
       // Actualizar la sección de notificación a participantes
       actualizarSeccionNotificacion();
     }).catch(error => {
@@ -241,7 +241,7 @@ function saveEpisodiosData() {
       console.log('Episodios guardados en stepEpisodios sin correos:', window.formData.stepEpisodios);
     });
   }
-  
+
   console.log('=== FIN saveEpisodiosData ===');
   console.log('formData final:', window.formData);
 }
@@ -258,10 +258,10 @@ const fetchJSON = async (file) => {
 function actualizarSeccionNotificacion() {
   const seccionNotificacion = document.getElementById('seccion-notificacion-participantes');
   if (!seccionNotificacion) return;
-  
+
   // Obtener todos los participantes de formData
   const participantes = [];
-  
+
   // Añadir participaciones de obras no serializadas
   if (formData.participaciones && formData.participaciones.length > 0) {
     formData.participaciones.forEach(p => {
@@ -270,7 +270,7 @@ function actualizarSeccionNotificacion() {
       }
     });
   }
-  
+
   // Añadir participaciones de episodios
   if (formData.stepEpisodios && formData.stepEpisodios.length > 0) {
     formData.stepEpisodios.forEach(episodio => {
@@ -283,33 +283,33 @@ function actualizarSeccionNotificacion() {
       }
     });
   }
-  
+
   // Generar HTML para la lista de participantes
   let listaHTML = '';
   let conCorreo = 0;
   let sinCorreo = 0;
-  
+
   participantes.forEach(p => {
     const tieneCorreo = p.correo && p.correo.trim() !== '';
     const claseCorreo = tieneCorreo ? 'tiene-correo' : 'sin-correo';
     const iconoCorreo = tieneCorreo ? '✓' : '✗';
     const mensajeCorreo = tieneCorreo ? p.correo : 'No se encontró correo';
-    
+
     listaHTML += `<li class="${claseCorreo}">
       <span class="nombre-participante">${p.autor}</span>
       <span class="estado-correo">${iconoCorreo}</span>
       <span class="correo-participante">${mensajeCorreo}</span>
     </li>`;
-    
+
     if (tieneCorreo) conCorreo++;
     else sinCorreo++;
   });
-  
+
   // Actualizar el contenido de la sección
   const mensajeInicial = sinCorreo > 0 ?
     `<div class="alerta-correos">Se encontraron ${sinCorreo} participantes sin correo electrónico. Se recomienda notificarlos manualmente mientras se actualizan los datos en ATN.</div>` :
     '';
-  
+
   seccionNotificacion.innerHTML = `
     <div class="notificacion-header">
       <h4>Notificación a participantes</h4>
@@ -332,15 +332,15 @@ function inicializarCarruselProgreso() {
   const prevBtn = document.querySelector('.nav-arrow.prev');
   const nextBtn = document.querySelector('.nav-arrow.next');
   const slidesToShow = 3; // Número de pasos visibles a la vez
-  
+
   if (!track || !slides.length) return;
-  
+
   // Calcular el ancho de cada slide basado en el número de slides a mostrar
   const slideWidth = 100 / slidesToShow;
   slides.forEach(slide => {
     slide.style.minWidth = `calc(${slideWidth}% - 10px)`;
   });
-  
+
   // Función para actualizar la visibilidad de los botones de navegación
   function updateNavButtons() {
     if (!prevBtn || !nextBtn) return;
@@ -348,15 +348,15 @@ function inicializarCarruselProgreso() {
     prevBtn.disabled = window.currentIndex <= 0;
     nextBtn.disabled = window.currentIndex >= maxIndex;
   }
-  
+
   // Función para mover el carrusel
   function moveToSlide(index) {
     if (!track) return;
-    
+
     // Asegurarse de que el índice esté dentro de los límites
     const maxIndex = Math.max(0, slides.length - slidesToShow);
     const newIndex = Math.max(0, Math.min(index, maxIndex));
-    
+
     // Solo actualizar si el índice ha cambiado
     if (window.currentIndex !== newIndex) {
       window.currentIndex = newIndex;
@@ -364,25 +364,25 @@ function inicializarCarruselProgreso() {
       track.style.transition = 'transform 0.3s ease';
       track.style.transform = `translateX(${offset}%)`;
       updateNavButtons();
-      
+
       // Forzar actualización del DOM
       track.offsetHeight;
     }
   }
-  
+
   // Event listeners para los botones de navegación
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
       moveToSlide(window.currentIndex - 1);
     });
   }
-  
+
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
       moveToSlide(window.currentIndex + 1);
     });
   }
-  
+
   // Inicializar botones de navegación
   window.currentIndex = 0;
   updateNavButtons();
@@ -392,28 +392,28 @@ function inicializarCarruselProgreso() {
 function actualizarBarraProgreso(pasoActual) {
   const slides = document.querySelectorAll('.progress-slide');
   if (!slides.length) return;
-  
+
   const slidesToShow = 3;
   const totalSlides = slides.length;
   const maxIndex = Math.max(0, totalSlides - slidesToShow);
   const track = document.querySelector('.progress-track');
   if (!track) return;
-  
+
   // Actualizar clases activas
   slides.forEach((slide, index) => {
     const step = slide.querySelector('.progress-step');
     const label = slide.querySelector('.step-label');
     const isActive = (index + 1) === pasoActual;
-    
+
     slide.classList.toggle('active', isActive);
     if (step) step.classList.toggle('active', isActive);
     if (label) label.classList.toggle('active', isActive);
-    
+
     // Si es el paso actual, asegurarse de que sea visible
     if (isActive) {
       let targetIndex = 0;
       const currentIndex = index;
-      
+
       // Calcular el índice objetivo según la posición del paso actual
       if (currentIndex <= 1) {
         targetIndex = 0; // Primeros dos pasos
@@ -422,14 +422,14 @@ function actualizarBarraProgreso(pasoActual) {
       } else {
         targetIndex = currentIndex - 1; // Pasos intermedios
       }
-      
+
       // Asegurar que no nos pasemos del máximo índice
       targetIndex = Math.min(targetIndex, maxIndex);
-      
+
       // Solo actualizar si es necesario
-      const isOutOfView = currentIndex < window.currentIndex || 
-                         currentIndex >= window.currentIndex + slidesToShow;
-      
+      const isOutOfView = currentIndex < window.currentIndex ||
+        currentIndex >= window.currentIndex + slidesToShow;
+
       if (isOutOfView || window.currentIndex > maxIndex) {
         window.currentIndex = targetIndex;
         const offset = -window.currentIndex * (100 / slidesToShow);
@@ -439,11 +439,11 @@ function actualizarBarraProgreso(pasoActual) {
       }
     }
   });
-  
+
   // Actualizar estado de los botones de navegación
   const prevBtn = document.querySelector('.nav-arrow.prev');
   const nextBtn = document.querySelector('.nav-arrow.next');
-  
+
   if (prevBtn) prevBtn.disabled = window.currentIndex <= 0;
   if (nextBtn) nextBtn.disabled = window.currentIndex >= maxIndex;
 }
@@ -460,7 +460,7 @@ async function renderStep2(container) {
     <div class="note-box">
       <div class="note-icon">ℹ️</div>
       <div class="note-content">
-        <strong>Nota:</strong> Complete esta sección solo si la obra ha tenido exhibición internacional. No es obligatorio completar este apartado.
+        <strong>Nota:</strong> Completa esta sección solo si la obra ha tenido exhibición internacional. No es obligatorio completar este apartado.
       </div>
     </div>
     
@@ -487,10 +487,10 @@ async function renderStep2(container) {
       </button>
     </div>
   `;
-  
+
   // Manejador para agregar más exhibiciones
   document.querySelector('.btn-agregar-exhibicion').addEventListener('click', agregarFilaExhibicion);
-  
+
   // Restaurar datos si existen, o agregar una fila vacía si no hay datos
   if (formData.step2 && formData.step2.exhibiciones && formData.step2.exhibiciones.length > 0) {
     restaurarExhibiciones();
@@ -503,17 +503,17 @@ async function renderStep2(container) {
 async function agregarFilaExhibicion() {
   const tbody = document.querySelector('.tabla-exhibiciones tbody');
   const exhibicionId = Date.now(); // ID único para cada exhibición
-  
+
   // Cargar datos necesarios
   const [paisesRaw, idiomas] = await Promise.all([
     fetchJSON('paises.json'),
     fetchJSON('idioma.json')
   ]);
   const paises = paisesRaw;
-  
+
   const fila = document.createElement('tr');
   fila.setAttribute('data-exhibicion-id', exhibicionId);
-  
+
   fila.innerHTML = `
     <td>
       <input type="text" 
@@ -524,14 +524,14 @@ async function agregarFilaExhibicion() {
     <td>
       <select class="form-control idioma-select" 
               name="exhibiciones[${exhibicionId}][idioma]">
-        <option value="">Seleccione...</option>
+        <option value="">Selecciona...</option>
         ${idiomas.map(idioma => `<option value="${idioma.Idioma}">${idioma.Idioma}</option>`).join('')}
       </select>
     </td>
     <td>
       <select class="form-control pais-select" 
               name="exhibiciones[${exhibicionId}][pais]">
-        <option value="">Seleccione...</option>
+        <option value="">Selecciona...</option>
         ${paises.map(pais => `<option value="${pais["Nombre del país"]}">${pais["Nombre del país"]}</option>`).join('')}
       </select>
     </td>
@@ -549,26 +549,26 @@ async function agregarFilaExhibicion() {
       </button>
     </td>
   `;
-  
+
   tbody.appendChild(fila);
-  
+
   // Inicializar Select2 para los nuevos selects
   if (window.$ && window.$.fn.select2) {
     $(fila.querySelector('.idioma-select')).select2({
-      placeholder: 'Seleccione...',
+      placeholder: 'Selecciona...',
       width: '100%',
       allowClear: true
     });
-    
+
     $(fila.querySelector('.pais-select')).select2({
-      placeholder: 'Seleccione...',
+      placeholder: 'Selecciona...',
       width: '100%',
       allowClear: true
     });
   }
-  
+
   // Agregar evento para eliminar fila con animación
-  fila.querySelector('.btn-eliminar-exhibicion').addEventListener('click', function() {
+  fila.querySelector('.btn-eliminar-exhibicion').addEventListener('click', function () {
     eliminarFilaExhibicionConAnimacion(fila);
   });
 }
@@ -577,7 +577,7 @@ async function agregarFilaExhibicion() {
 function eliminarFilaExhibicionConAnimacion(fila) {
   // Agregar clase de animación de salida
   fila.classList.add('removing');
-  
+
   // Esperar a que termine la animación antes de remover
   setTimeout(() => {
     fila.remove();
@@ -588,7 +588,7 @@ function eliminarFilaExhibicionConAnimacion(fila) {
 function restaurarExhibiciones() {
   const tbody = document.querySelector('.tabla-exhibiciones tbody');
   tbody.innerHTML = ''; // Limpiar tabla
-  
+
   if (formData.step2 && formData.step2.exhibiciones) {
     formData.step2.exhibiciones.forEach(exhibicion => {
       agregarFilaExhibicionConDatos(exhibicion);
@@ -600,17 +600,17 @@ function restaurarExhibiciones() {
 async function agregarFilaExhibicionConDatos(datos) {
   const tbody = document.querySelector('.tabla-exhibiciones tbody');
   const exhibicionId = datos.id || Date.now();
-  
+
   // Cargar datos necesarios
   const [paisesRaw, idiomas] = await Promise.all([
     fetchJSON('paises.json'),
     fetchJSON('idioma.json')
   ]);
   const paises = paisesRaw;
-  
+
   const fila = document.createElement('tr');
   fila.setAttribute('data-exhibicion-id', exhibicionId);
-  
+
   fila.innerHTML = `
     <td>
       <input type="text" 
@@ -622,14 +622,14 @@ async function agregarFilaExhibicionConDatos(datos) {
     <td>
       <select class="form-control idioma-select" 
               name="exhibiciones[${exhibicionId}][idioma]">
-        <option value="">Seleccione...</option>
+        <option value="">Selecciona...</option>
         ${idiomas.map(idioma => `<option value="${idioma.Idioma}" ${idioma.Idioma === datos.idioma ? 'selected' : ''}>${idioma.Idioma}</option>`).join('')}
       </select>
     </td>
     <td>
       <select class="form-control pais-select" 
               name="exhibiciones[${exhibicionId}][pais]">
-        <option value="">Seleccione...</option>
+        <option value="">Selecciona...</option>
         ${paises.map(pais => `<option value="${pais["Nombre del país"]}" ${pais["Nombre del país"] === datos.pais ? 'selected' : ''}>${pais["Nombre del país"]}</option>`).join('')}
       </select>
     </td>
@@ -648,26 +648,26 @@ async function agregarFilaExhibicionConDatos(datos) {
       </button>
     </td>
   `;
-  
+
   tbody.appendChild(fila);
-  
+
   // Inicializar Select2 para los nuevos selects
   if (window.$ && window.$.fn.select2) {
     $(fila.querySelector('.idioma-select')).select2({
-      placeholder: 'Seleccione...',
+      placeholder: 'Selecciona...',
       width: '100%',
       allowClear: true
     });
-    
+
     $(fila.querySelector('.pais-select')).select2({
-      placeholder: 'Seleccione...',
+      placeholder: 'Selecciona...',
       width: '100%',
       allowClear: true
     });
   }
-  
+
   // Agregar evento para eliminar fila con animación
-  fila.querySelector('.btn-eliminar-exhibicion').addEventListener('click', function() {
+  fila.querySelector('.btn-eliminar-exhibicion').addEventListener('click', function () {
     eliminarFilaExhibicionConAnimacion(fila);
   });
 }
@@ -680,7 +680,7 @@ async function inicializarSelect2() {
   ]);
   const paises = paisesRaw;
   // Inicializar selects de idioma
-  $('.idioma-select').each(function() {
+  $('.idioma-select').each(function () {
     if (!$(this).hasClass('select2-hidden-accessible')) {
       const select = $(this);
       select.empty().append('<option value="">Seleccione...</option>');
@@ -697,7 +697,7 @@ async function inicializarSelect2() {
     }
   });
   // Inicializar selects de país
-  $('.pais-select').each(function() {
+  $('.pais-select').each(function () {
     if (!$(this).hasClass('select2-hidden-accessible')) {
       const select = $(this);
       select.empty().append('<option value="">Seleccione...</option>');
@@ -712,22 +712,22 @@ async function inicializarSelect2() {
       select.trigger('change.select2');
     }
   });
-  
+
   // Restaurar las variables globales participacionesPorBloque y titulosPorBloque
   bloquesAgrupados.forEach((bloqueData, claveBloque) => {
     const bloqueId = bloqueIndex - bloquesAgrupados.size + Array.from(bloquesAgrupados.keys()).indexOf(claveBloque);
-    
+
     // Restaurar participaciones por bloque
     if (bloqueData.participaciones && bloqueData.participaciones.length > 0) {
       participacionesPorBloque[bloqueId] = bloqueData.participaciones;
     }
-    
+
     // Restaurar títulos por bloque
     if (bloqueData.titulosAlternativos && bloqueData.titulosAlternativos.length > 0) {
       titulosPorBloque[bloqueId] = bloqueData.titulosAlternativos;
     }
   });
-  
+
   console.log('Variables globales restauradas:', {
     participacionesPorBloque,
     titulosPorBloque
@@ -761,11 +761,11 @@ async function renderStep1(container) {
 
   function renderGeneroOptions(formato) {
     if (!formato) {
-      return '<option value="">Seleccione formato antes para mostrar opciones</option>';
+      return '<option value="">Selecciona antes el formato para mostrar las opciones</option>';
     }
     const generosFiltrados = getGenerosByFormato(formato);
     return [
-      '<option value="">Seleccione...</option>',
+      '<option value="">Selecciona…</option>',
       ...generosFiltrados.filter(g => g.genero).map(g => `<option value="${g.genero}">${g.genero}</option>`)
     ].join('');
   }
@@ -778,14 +778,14 @@ async function renderStep1(container) {
     <div class="form-group">
       <label for="formato">Tipo de formato <span style="color:${COLOR_VERDE}">*</span></label>
       <select id="formato" name="formato" required>
-        <option value="">Seleccione...</option>
+        <option value="">Selecciona…</option>
         ${formatos.filter(f => f.formato).map(f => `<option value="${f.formato}">${f.formato}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
       <label for="genero">Género <span style="color:${COLOR_VERDE}">*</span></label>
       <select id="genero" name="genero" required disabled>
-        <option value="">Seleccione formato antes para mostrar opciones</option>
+        <option value="">Selecciona antes el formato para mostrar las opciones</option>
       </select>
     </div>
     <div class="form-group">
@@ -793,30 +793,33 @@ async function renderStep1(container) {
       <select id="productora" name="productora" multiple required>
         ${productoras.map(p => `<option value="${p.Productora}">${p.Productora}</option>`).join('')}
       </select>
-      <div class="input-hint">Si no aparece, escriba el nombre completo para agregarla. Puede seleccionar varias.</div>
+      <div class="input-hint">Si no aparece, escribe el nombre completo para agregarla. Puedes seleccionar varias.</div>
     </div>
     <div class="form-group">
       <label for="paises">País de producción</label>
       <select id="paises" name="paises" multiple>
         ${paises.map(p => `<option value="${p["Nombre del país"]}">${p["Nombre del país"]}</option>`).join('')}
       </select>
-      <div class="input-hint">Puede seleccionar varios países.</div>
+      <div class="input-hint">Puedes seleccionar varios países.</div>
     </div>
     <div class="form-group">
       <label for="anio">Año de producción <span style="color:${COLOR_VERDE}">*</span></label>
-      <input type="number" id="anio" name="anio" min="1900" max="${new Date().getFullYear()}" placeholder="Ej: 2019" required>
+      <select id="anio" name="anio" required>
+        <option value="">Selecciona o escribe el nombre</option>
+        ${Array.from({ length: new Date().getFullYear() - 1899 }, (_, i) => new Date().getFullYear() - i).map(year => `<option value="${year}">${year}</option>`).join('')}
+      </select>
     </div>
     <div class="form-group">
       <label for="idioma">Idioma</label>
       <select id="idioma" name="idioma">
-        <option value="">Seleccione...</option>
+        <option value="">Selecciona</option>
         ${idiomas.filter(i => i.Idioma).map(i => `<option value="${i.Idioma}">${i.Idioma}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
       <label for="actores">Actores</label>
       <input type="text" id="actores" name="actores" placeholder="Ej: Juan Pérez, María García">
-      <div class="input-hint">Separe los nombres con coma y espacio.</div>
+      <div class="input-hint">Separa los nombres con coma y espacio.</div>
     </div>
     <div class="form-group">
       <label for="directores">Directores</label>
@@ -830,41 +833,43 @@ async function renderStep1(container) {
 
   // Activar Select2 en todos los selects
   if (window.$ && window.$.fn.select2) {
-    $(container).find('select').each(function() {
+    $(container).find('select').each(function () {
       const isMultiple = $(this).prop('multiple');
       let id = $(this).attr('id');
       let placeholder = (id === 'paises' || id === 'productora')
-        ? 'Seleccione o escriba...'
-        : $(this).find('option:first').text();
+        ? 'Selecciona o escribe el nombre'
+        : (id === 'anio')
+          ? 'Selecciona o escribe el nombre'
+          : $(this).find('option:first').text();
       $(this).select2({
         placeholder: placeholder,
         width: '100%',
         allowClear: true,
-        tags: id === 'productora' || id === 'paises',
+        tags: id === 'productora' || id === 'paises' || id === 'anio',
         multiple: isMultiple
       });
     });
   }
 
   // Lógica para actualizar género según formato
-  $('#formato').on('change', function() {
+  $('#formato').on('change', function () {
     const formatoSel = $(this).val();
     const generoSelect = $('#genero');
     generoSelect.html(renderGeneroOptions(formatoSel));
     generoSelect.val('').trigger('change');
-    
+
     // Habilitar/deshabilitar el select de género según si hay formato seleccionado
     if (formatoSel) {
       generoSelect.prop('disabled', false);
       generoSelect.select2({
-        placeholder: 'Seleccione...',
+        placeholder: 'Selecciona…',
         width: '100%',
         allowClear: true
       });
     } else {
       generoSelect.prop('disabled', true);
       generoSelect.select2({
-        placeholder: 'Seleccione formato antes para mostrar opciones',
+        placeholder: 'Selecciona antes el formato para mostrar las opciones',
         width: '100%'
       });
     }
@@ -885,13 +890,13 @@ function saveStep2Data() {
   // Asegurarse de que formData.step2 existe
   if (!formData) formData = { step1: {}, step2: { exhibiciones: [] } };
   if (!formData.step2) formData.step2 = { exhibiciones: [] };
-  
+
   // Inicializar array de exhibiciones
   formData.step2.exhibiciones = [];
-  
+
   // Obtener todas las filas de la tabla de exhibiciones
   const filas = document.querySelectorAll('.tabla-exhibiciones tbody tr');
-  
+
   filas.forEach((fila) => {
     const exhibicionId = fila.getAttribute('data-exhibicion-id');
     const datosExhibicion = {
@@ -901,29 +906,29 @@ function saveStep2Data() {
       pais: fila.querySelector('select[name$="[pais]"]')?.value || '',
       canal: fila.querySelector('input[name$="[canal]"]')?.value || ''
     };
-    
+
     // Solo agregar si al menos un campo tiene datos
     if (datosExhibicion.otro_titulo || datosExhibicion.idioma || datosExhibicion.pais || datosExhibicion.canal) {
       formData.step2.exhibiciones.push(datosExhibicion);
     }
   });
-  
+
   console.log('Datos del paso 2 guardados:', formData.step2);
   return true;
 }
 
 function saveStepFirmaData() {
   console.log('=== GUARDANDO DATOS PASO FIRMA ===');
-  
+
   // Guardar datos del declarante
   const nombreDeclarante = document.getElementById('declarante-nombre')?.value || '';
   const rutDeclarante = document.getElementById('declarante-rut')?.value || '';
   const correoDeclarante = document.getElementById('declarante-correo')?.value || '';
-  
+
   // Calcular fecha de declaración automáticamente (invisible para el usuario)
   // Enviar solo la fecha en formato YYYY-MM-DD para cumplir formato date requerido por Power Automate
   const ahora = new Date();
-  
+
   // Obtener solo la fecha actual en zona horaria de Chile usando Intl.DateTimeFormat
   const formatter = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'America/Santiago',
@@ -931,23 +936,23 @@ function saveStepFirmaData() {
     month: '2-digit',
     day: '2-digit'
   });
-  
+
   const fechaDeclaracion = formatter.format(ahora); // Formato YYYY-MM-DD
-  
+
   // Inicializar objeto declarante si no existe
   if (!formData.declarante) {
     formData.declarante = {};
   }
-  
+
   // Obtener estado del checkbox de declaración de veracidad
   const declaracionVeracidad = document.getElementById('declaracion-veracidad')?.checked || false;
-  
+
   formData.declarante.nombre = nombreDeclarante;
   formData.declarante.rut = rutDeclarante;
   formData.declarante.correoDeclarante = correoDeclarante; // Nuevo campo de correo
   formData.declarante.fechaDeclaracion = fechaDeclaracion;
   formData.declarante.declaracionVeracidad = declaracionVeracidad; // Nuevo campo para el checkbox
-  
+
   console.log('Datos del declarante guardados:', {
     nombre: nombreDeclarante,
     rut: rutDeclarante,
@@ -978,7 +983,7 @@ function saveParticipacionesModal() {
   if (!filas || filas.length === 0) {
     return; // No hay datos que guardar
   }
-  
+
   // Verificar si hay al menos una fila con datos
   let hayDatos = false;
   filas.forEach(fila => {
@@ -989,18 +994,18 @@ function saveParticipacionesModal() {
       hayDatos = true;
     }
   });
-  
+
   if (!hayDatos) {
     return; // No hay datos reales que guardar
   }
-  
+
   console.log('=== GUARDANDO PARTICIPACIONES DEL MODAL AL NAVEGAR ===');
   console.log('Bloque actual del modal:', bloqueActualModal);
-  
+
   // Obtener las participaciones del modal
   const participacionesModal = obtenerDatosParticipacionesModal();
   console.log('Participaciones del modal:', participacionesModal);
-  
+
   // Si hay un bloque específico, guardar las participaciones para ese bloque
   if (bloqueActualModal) {
     participacionesPorBloque[bloqueActualModal] = [...participacionesModal];
@@ -1009,7 +1014,7 @@ function saveParticipacionesModal() {
     // Fallback para obras no serializadas
     const formatoSelect = document.getElementById('formato');
     const esSerializada = formatoSelect && (formatoSelect.value === 'Serie' || formatoSelect.value === 'Miniserie');
-    
+
     if (!esSerializada) {
       console.log('Obra no serializada: Guardando en stepParticipaciones');
       formData.stepParticipaciones = participacionesModal;
@@ -1068,49 +1073,49 @@ function scrollToTop() {
 // Navegación y lógica principal con animaciones
 async function showStep(idx) {
   console.log('Mostrando paso:', idx + 1);
-  
+
   // Validar que el índice esté dentro de los límites
   if (idx < 0 || idx >= steps.length) {
     console.error('Índice de paso no válido:', idx);
     return;
   }
-  
+
   // Obtener el elemento del paso actual y el siguiente
   const currentStepId = `step-${currentStep + 1}`;
   const nextStepId = `step-${idx + 1}`;
   const currentStepElement = document.getElementById(currentStepId);
   const nextStepElement = document.getElementById(nextStepId);
-  
+
   if (!nextStepElement) {
     console.error('No se encontró el elemento del paso:', nextStepId);
     return;
   }
-  
+
   // Guardar datos del paso actual antes de cambiar
   if (currentStep >= 0 && currentStep < steps.length) {
     saveCurrentStepData();
   }
-  
+
   // Iniciar animación de transición
   if (currentStepElement) {
     currentStepElement.classList.remove('active');
   }
-  
+
   // Mostrar el siguiente paso
   nextStepElement.style.display = 'block';
-  
+
   // Forzar un reflow para que la animación funcione
   void nextStepElement.offsetHeight;
-  
+
   // Aplicar la clase active para iniciar la animación
   nextStepElement.classList.add('active');
-  
+
   // Actualizar paso actual
   currentStep = idx;
-  
+
   // Actualizar la barra de progreso
   actualizarBarraProgreso(currentStep + 1);
-  
+
   // Renderizar el paso si es necesario
   if (steps[idx]) {
     console.log('Renderizando paso:', idx + 1);
@@ -1118,7 +1123,7 @@ async function showStep(idx) {
       await steps[idx].render(nextStepElement);
       // Restaurar datos guardados para este paso
       restoreStepData(idx, nextStepElement);
-      
+
       // Configurar validación de nombres después de renderizar el paso 1
       if (idx === 0) {
         setupNameValidation();
@@ -1127,15 +1132,15 @@ async function showStep(idx) {
       console.error('Error al renderizar el paso:', error);
     }
   }
-  
+
   // Desplazarse al principio del formulario
   scrollToTop();
-  
+
   // Actualizar controles de navegación
   const prevBtn = document.getElementById('prev-btn');
   const nextBtn = document.getElementById('next-btn');
   const submitBtn = document.getElementById('submit-btn');
-  
+
   if (prevBtn) prevBtn.disabled = idx === 0;
   if (nextBtn) nextBtn.style.display = idx === steps.length - 1 ? 'none' : '';
   if (submitBtn) submitBtn.style.display = idx === steps.length - 1 ? '' : 'none';
@@ -1145,16 +1150,16 @@ async function showStep(idx) {
 function showError(element, message) {
   const formGroup = element.closest('.form-group');
   if (!formGroup) return;
-  
+
   // Marcar el grupo como con error
   formGroup.classList.add('has-error');
-  
+
   // Agregar o actualizar el mensaje de error
   let errorElement = formGroup.querySelector('.error-message');
   if (!errorElement) {
     errorElement = document.createElement('div');
     errorElement.className = 'error-message';
-    
+
     // Insertar después del elemento de entrada o select
     if (element.nextSibling) {
       element.parentNode.insertBefore(errorElement, element.nextSibling);
@@ -1162,12 +1167,12 @@ function showError(element, message) {
       formGroup.appendChild(errorElement);
     }
   }
-  
+
   errorElement.textContent = message;
-  
+
   // Agregar clase de error al campo
   element.classList.add('error');
-  
+
   // Enfocar el primer campo con error
   if (!document.querySelector('.has-error')) {
     setTimeout(() => element.focus(), 100);
@@ -1177,20 +1182,20 @@ function showError(element, message) {
 // Limpiar mensaje de error
 function clearError(element) {
   if (!element) return;
-  
+
   const formGroup = element.closest('.form-group');
   if (!formGroup) return;
-  
+
   // Quitar clases de error
   formGroup.classList.remove('has-error');
   element.classList.remove('error');
-  
+
   // Eliminar mensaje de error si existe
   const errorElement = formGroup.querySelector('.error-message');
   if (errorElement) {
     errorElement.remove();
   }
-  
+
   // Limpiar también en los selects de Select2
   if ($.fn.select2 && $(element).hasClass('select2-hidden-accessible')) {
     const $select2 = $(element).data('select2');
@@ -1210,11 +1215,11 @@ function validarAnio(anio) {
 function validateStep1() {
   let isValid = true;
   const currentYear = new Date().getFullYear();
-  
+
   // Limpiar errores previos
   document.querySelectorAll('.error-message').forEach(el => el.remove());
   document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-  
+
   // Validar año primero
   const anioInput = document.getElementById('anio');
   if (anioInput) {
@@ -1227,7 +1232,7 @@ function validateStep1() {
       isValid = false;
     }
   }
-  
+
   // Campos obligatorios (excluyendo año que ya validamos)
   const requiredFields = [
     { id: 'titulo', label: 'Título' },
@@ -1238,17 +1243,17 @@ function validateStep1() {
     { id: 'idioma', label: 'Idioma original' }
     // Nota: actores, directores y guionistas son opcionales
   ];
-  
+
   requiredFields.forEach(field => {
     // Ya validamos el año, lo saltamos
     if (field.id === 'anio') return;
-    
+
     const element = document.getElementById(field.id);
     if (!element) return;
-    
+
     let value = element.value;
     let isEmpty = false;
-    
+
     // Manejar diferentes tipos de campos
     if (element.type === 'select-multiple') {
       // Para selects múltiples
@@ -1257,7 +1262,7 @@ function validateStep1() {
       // Para campos de texto, select simples, etc.
       isEmpty = !value || value.trim() === '';
     }
-    
+
     if (isEmpty) {
       showError(element, `El campo ${field.label} es obligatorio`);
       isValid = false;
@@ -1265,7 +1270,7 @@ function validateStep1() {
       clearError(element);
     }
   });
-  
+
   // Si hay errores, desplazarse al primer error
   if (!isValid) {
     const firstError = document.querySelector('.has-error');
@@ -1273,7 +1278,7 @@ function validateStep1() {
       firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
-  
+
   return isValid;
 }
 
@@ -1354,7 +1359,7 @@ function showSuccessMessage(msg, type = 'success') {
     `;
     document.body.appendChild(overlay);
   }
-  
+
   // Crear contenedor del mensaje
   const messageContainer = document.createElement('div');
   messageContainer.style.cssText = `
@@ -1367,7 +1372,7 @@ function showSuccessMessage(msg, type = 'success') {
     transform: scale(0.8);
     transition: transform 0.3s ease;
   `;
-  
+
   // Icono según el tipo
   let icon = '';
   let iconColor = '';
@@ -1378,7 +1383,7 @@ function showSuccessMessage(msg, type = 'success') {
     icon = '<i class="fas fa-check-circle"></i>';
     iconColor = '#28a745';
   }
-  
+
   messageContainer.innerHTML = `
     <div style="font-size: 3rem; color: ${iconColor}; margin-bottom: 1rem;">
       ${icon}
@@ -1387,10 +1392,10 @@ function showSuccessMessage(msg, type = 'success') {
       ${msg}
     </div>
   `;
-  
+
   overlay.innerHTML = '';
   overlay.appendChild(messageContainer);
-  
+
   // Mostrar con animación
   overlay.style.display = 'flex';
   setTimeout(() => {
@@ -1422,7 +1427,7 @@ function showErrorMessage(msg) {
     `;
     document.body.appendChild(overlay);
   }
-  
+
   // Crear contenedor del mensaje
   const messageContainer = document.createElement('div');
   messageContainer.style.cssText = `
@@ -1435,7 +1440,7 @@ function showErrorMessage(msg) {
     transform: scale(0.8);
     transition: transform 0.3s ease;
   `;
-  
+
   messageContainer.innerHTML = `
     <div style="font-size: 3rem; color: #dc3545; margin-bottom: 1rem;">
       <i class="fas fa-exclamation-triangle"></i>
@@ -1456,10 +1461,10 @@ function showErrorMessage(msg) {
       Entendido
     </button>
   `;
-  
+
   overlay.innerHTML = '';
   overlay.appendChild(messageContainer);
-  
+
   // Mostrar con animación
   overlay.style.display = 'flex';
   setTimeout(() => {
@@ -1588,14 +1593,14 @@ function restoreStep1Data(container) {
 function restoreStepDatosTecnicos(container) {
   if (!formData.step1) return;
   console.log('Restaurando datos técnicos:', formData.step1);
-  
+
   const technicalFields = {
     'sonido': formData.step1.sonido || '',
     'color': formData.step1.color || '',
     'caracteristicas_tecnicas': formData.step1.caracteristicas_tecnicas || '',
     'destino': formData.step1.destino || ''
   };
-  
+
   // Usar setTimeout para asegurar que los elementos estén completamente renderizados
   setTimeout(() => {
     Object.keys(technicalFields).forEach(fieldName => {
@@ -1603,7 +1608,7 @@ function restoreStepDatosTecnicos(container) {
       if (element && element.tagName === 'SELECT') {
         element.value = technicalFields[fieldName];
         console.log(`Restaurado ${fieldName}: ${technicalFields[fieldName]}`);
-        
+
         // Disparar evento change para actualizar cualquier listener
         const event = new Event('change', { bubbles: true });
         element.dispatchEvent(event);
@@ -1611,88 +1616,84 @@ function restoreStepDatosTecnicos(container) {
         console.warn(`Elemento ${fieldName} no encontrado o no es SELECT`);
       }
     });
-    
+
     console.log('Datos técnicos restaurados');
   }, 100);
 }
 
 // Función para formatear nombres separados por comas
 function formatNames(input) {
-    if (!input || !input.value) return true;
-    
-    // Eliminar espacios múltiples y espacios alrededor de comas
-    let value = input.value
-        .replace(/\s*,\s*/g, ', ')  // Reemplazar comas con o sin espacios por coma + espacio
-        .replace(/\s+/g, ' ')        // Reemplazar múltiples espacios por uno solo
-        .replace(/,\s*$/, '');      // Eliminar coma al final si existe
-    
-    // Actualizar el valor del input
-    input.value = value;
-    return true;
+  if (!input || !input.value) return true;
+
+  // Eliminar espacios múltiples y espacios alrededor de comas
+  let value = input.value
+    .replace(/\s*,\s*/g, ', ')  // Reemplazar comas con o sin espacios por coma + espacio
+    .replace(/\s+/g, ' ')        // Reemplazar múltiples espacios por uno solo
+    .replace(/,\s*$/, '');      // Eliminar coma al final si existe
+
+  // Actualizar el valor del input
+  input.value = value;
+  return true;
 }
 
 // Función para configurar la validación de campos de nombres
 function setupNameValidation() {
-    const nameFields = ['actores', 'directores', 'guionistas'];
-    
-    nameFields.forEach(fieldId => {
-        const input = document.getElementById(fieldId);
-        if (input) {
-            // Validar al perder el foco
-            input.addEventListener('blur', function() {
-                formatNames(this);
-            });
-            
-            // Validar al presionar Enter
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    formatNames(this);
-                }
-            });
+  const nameFields = ['actores', 'directores', 'guionistas'];
+
+  nameFields.forEach(fieldId => {
+    const input = document.getElementById(fieldId);
+    if (input) {
+      // Validar al perder el foco
+      input.addEventListener('blur', function () {
+        formatNames(this);
+      });
+
+      // Validar al presionar Enter
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          formatNames(this);
         }
-    });
+      });
+    }
+  });
 }
 
 // Función para formatear los campos de nombres antes del envío
 function validarCamposNombres() {
-    const nameFields = ['actores', 'directores', 'guionistas'];
-    
-    nameFields.forEach(fieldId => {
-        const input = document.getElementById(fieldId);
-        if (input) {
-            formatNames(input);
-        }
-    });
-    
-    return true;
+  const nameFields = ['actores', 'directores', 'guionistas'];
+
+  nameFields.forEach(fieldId => {
+    const input = document.getElementById(fieldId);
+    if (input) {
+      formatNames(input);
+    }
+  });
+
+  return true;
 }
 
 // Envío simulado
-// Función auxiliar para filtrar participantes sin correo y eliminar duplicados
+// Función auxiliar para recolectar correos únicos y mantener todos los participantes
 function filtrarParticipantesSinCorreo(formDataToFilter) {
   // Crear una copia profunda para no modificar el original
   const filteredData = JSON.parse(JSON.stringify(formDataToFilter));
-  
-  // Crear un conjunto de correos únicos para evitar duplicados
+
+  // Crear un conjunto de correos únicos para evitar duplicados (solo para notificaciones)
   const correosUnicos = new Set();
-  
-  // Recolectar correos de participaciones principales
+
+  // Recolectar correos de participaciones principales (mantener todas las participaciones)
   if (filteredData.participaciones && Array.isArray(filteredData.participaciones)) {
-    // Filtrar participaciones sin correo
-    filteredData.participaciones = filteredData.participaciones.filter(p => 
-      p.correo && p.correo.trim() !== ''
-    );
-    
-    // Añadir correos al conjunto de únicos
+    // NO filtrar participaciones - mantener todas (con y sin correo)
+    // Solo recolectar correos válidos para notificaciones
     filteredData.participaciones.forEach(p => {
       if (p.correo && p.correo.trim() !== '') {
         correosUnicos.add(p.correo.trim());
       }
     });
   }
-  
-  // Filtrar participaciones en episodios y recolectar correos únicos
+
+  // Recolectar correos únicos de episodios (mantener todas las participaciones)
   if (filteredData.stepEpisodios && Array.isArray(filteredData.stepEpisodios)) {
     // Recolectar todos los correos únicos de episodios
     filteredData.stepEpisodios.forEach(episodio => {
@@ -1704,40 +1705,31 @@ function filtrarParticipantesSinCorreo(formDataToFilter) {
         });
       }
     });
-    
-    // Mantener la estructura original de episodios para otros propósitos
-    filteredData.stepEpisodios = filteredData.stepEpisodios.map(episodio => {
-      if (episodio.participaciones && Array.isArray(episodio.participaciones)) {
-        return {
-          ...episodio,
-          participaciones: episodio.participaciones.filter(p => 
-            p.correo && p.correo.trim() !== ''
-          )
-        };
-      }
-      return episodio;
-    });
+
+    // NO filtrar participaciones en episodios - mantener todas (con y sin correo)
+    // La estructura original se mantiene intacta
   }
-  
-  // Crear una variable CorreosUnicos para Power Automate
+
+  // Crear una variable CorreosUnicos para Power Automate (solo correos válidos para notificaciones)
   filteredData.CorreosUnicos = Array.from(correosUnicos);
   console.log('Correos únicos para notificación:', filteredData.CorreosUnicos);
-  
+  console.log('Participaciones completas enviadas (incluye autores manuales):', filteredData);
+
   return filteredData;
 }
 
 async function submitForm(e) {
   e.preventDefault();
   if (!validateStep1()) return;
-  
+
   // Formatear campos de nombres (actores, directores, guionistas)
   validarCamposNombres();
-  
+
   // Guardar datos de todos los pasos antes del envío
   saveCurrentStepData();
   saveStep1Data();
   saveStepFirmaData(); // Asegurar que los datos del declarante se guarden
-  
+
   // Solo llamar saveEpisodiosData si stepEpisodios no existe o está vacío
   // para evitar sobrescribir las participaciones guardadas desde el modal
   if (!formData.stepEpisodios || !Array.isArray(formData.stepEpisodios) || formData.stepEpisodios.length === 0) {
@@ -1746,10 +1738,10 @@ async function submitForm(e) {
   } else {
     console.log('NO llamando saveEpisodiosData desde submitForm para preservar participaciones existentes');
   }
-  
+
   // Filtrar participantes sin correo antes del envío
   const formDataParaEnvio = filtrarParticipantesSinCorreo(window.formData);
-  
+
   document.getElementById('submit-btn').disabled = true;
   showSuccessMessage('Enviando declaración...', 'loading');
   // DEPURACIÓN: Mostrar el JSON que se enviará
@@ -1767,13 +1759,13 @@ async function submitForm(e) {
     const text = await response.text();
     console.log('Respuesta del servidor:', text);
     if (!response.ok) throw new Error('Error en la respuesta');
-    
+
     // Mostrar mensaje de éxito y redirigir a página de éxito
     showSuccessMessage('¡Declaración enviada correctamente!', 'success');
     setTimeout(() => {
       window.location.href = 'exito.html';
     }, 1500);
-    
+
   } catch (err) {
     // Mostrar mensaje de error técnico más prominente
     showErrorMessage('Ocurrió un problema técnico al enviar la declaración. Por favor, inténtelo nuevamente en unos minutos. Si el problema persiste, contacte al soporte técnico.');
@@ -1786,22 +1778,22 @@ async function submitForm(e) {
 // Función para configurar la validación en tiempo real
 function setupRealTimeValidation() {
   // Limpiar errores al escribir en los campos
-  document.addEventListener('input', function(e) {
+  document.addEventListener('input', function (e) {
     const target = e.target;
     if (target.matches('input, textarea, select')) {
       handleFieldValidation(target);
     }
   });
-  
+
   // Limpiar errores al cambiar opciones en selects
-  document.addEventListener('change', function(e) {
+  document.addEventListener('change', function (e) {
     if (e.target.matches('select')) {
       handleFieldValidation(e.target);
     }
   });
-  
+
   // Manejar eventos de Select2
-  $(document).on('select2:select select2:unselect', function(e) {
+  $(document).on('select2:select select2:unselect', function (e) {
     const selectElement = e.target;
     handleFieldValidation(selectElement);
   });
@@ -1810,7 +1802,7 @@ function setupRealTimeValidation() {
 // Función auxiliar para manejar la validación de campos
 function handleFieldValidation(element) {
   if (!element) return;
-  
+
   // Obtener el valor actual del campo
   let value;
   if (element.matches('select[multiple]')) {
@@ -1820,11 +1812,11 @@ function handleFieldValidation(element) {
   } else {
     value = element.value.trim();
   }
-  
+
   // Si el campo tiene un valor, limpiar el error
   if (value && (!Array.isArray(value) || value.length > 0)) {
     clearError(element);
-    
+
     // Si es un Select2, también limpiar el contenedor
     if (window.$ && $.fn.select2 && $(element).hasClass('select2-hidden-accessible')) {
       const $select2 = $(element).data('select2');
@@ -1851,7 +1843,8 @@ async function renderStepParticipaciones(container) {
         </div>
         <h2 class="section-blocked-title">Sección Participaciones</h2>
         <p class="section-blocked-message">
-          La sección de participaciones está bloqueada porque la participación se gestiona por episodio. En la siguiente sección puedes gestionar las participaciones por episodio.
+          La sección de participaciones de obra unitaria está bloqueada ya que para las obras serializadas la 
+participación se gestiona por episodio, habilitado en la siguiente sección. 
         </p>
         <div class="section-blocked-hint">
           <strong>Tip:</strong> Si tu obra no es serializada, regresa a la sección "Datos Generales" y selecciona el tipo de formato correspondiente para desbloquear esta sección.
@@ -1860,14 +1853,14 @@ async function renderStepParticipaciones(container) {
     `;
     return;
   }
-  
+
   container.innerHTML = `
     <div class="note-box">
       <div class="note-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="8" r="3" fill="#097137"/><circle cx="17" cy="8" r="3" fill="#097137"/><ellipse cx="12" cy="17" rx="9" ry="5" fill="#097137" fill-opacity="0.13"/><ellipse cx="7" cy="17" rx="4" ry="2" fill="#097137" fill-opacity="0.13"/><ellipse cx="17" cy="17" rx="4" ry="2" fill="#097137" fill-opacity="0.13"/></svg>
       </div>
       <div class="note-content">
-        <strong>Registre los derechohabientes de la obra.</strong> Puede agregar varias líneas de participación. El porcentaje de participación por rol no puede superar el 100%.
+        <strong>Registra los derechohabientes de la obra.</strong> Puedes agregar varias líneas de participación. El porcentaje de participación por rol no puede superar el 100%.
       </div>
     </div>
     
@@ -1898,7 +1891,7 @@ async function renderStepParticipaciones(container) {
   `;
   // Manejador para agregar más participaciones
   document.querySelector('.btn-agregar-participacion').addEventListener('click', agregarFilaParticipacion);
-  
+
   // Restaurar datos si existen, o agregar una fila vacía si no hay datos
   if (formData.participaciones && formData.participaciones.length > 0) {
     restaurarParticipaciones();
@@ -1917,25 +1910,25 @@ function validarParticipaciones() {
   let error = '';
   let hayErrores = false;
   let mensajesError = [];
-  
+
   // Verificar si hay filas en la tabla
   if (filas.length === 0) {
     console.log('No hay filas en la tabla de participaciones');
     hayErrores = true;
     mensajesError.push('Debe agregar al menos una participación.');
   }
-  
+
   filas.forEach(fila => {
     const rolSelect = fila.querySelector('.rol-select');
     const autorSelect = fila.querySelector('.autor-select');
     const porcentajeInput = fila.querySelector('input[type="number"]');
-    
+
     // Verificar que los elementos existan antes de acceder a sus propiedades
     if (!rolSelect || !autorSelect || !porcentajeInput) {
       console.error('Error: No se encontraron todos los elementos en la fila de participación');
       return;
     }
-    
+
     // Validar que todos los campos estén llenos
     if (!rolSelect.value || !autorSelect.value || !porcentajeInput.value) {
       hayErrores = true;
@@ -1943,14 +1936,14 @@ function validarParticipaciones() {
         mensajesError.push('Todos los campos son obligatorios.');
       }
     }
-    
+
     const rol = rolSelect.value;
     const porcentaje = parseFloat(porcentajeInput.value) || 0;
     if (!rol) return;
     if (!sumas[rol]) sumas[rol] = 0;
     sumas[rol] += porcentaje;
   });
-  
+
   // Validar que el total por rol no supere 100%
   for (const rol in sumas) {
     if (sumas[rol] > 100.001) { // margen flotante
@@ -1958,7 +1951,7 @@ function validarParticipaciones() {
       mensajesError.push(`La suma de participación para el rol "${rol}" supera el 100%. Actual: ${sumas[rol].toFixed(2)}%`);
     }
   }
-  
+
   // Mostrar resumen dinámico
   const resumenDiv = document.getElementById('participacion-resumen');
   if (resumenDiv) {
@@ -1968,7 +1961,7 @@ function validarParticipaciones() {
       return `<span class="${esValido ? 'ok' : 'error'}">Total ${rol}: ${total.toFixed(2)}% ${esValido ? '✅' : '❌'}</span>`;
     }).join(' ');
   }
-  
+
   const errorElement = document.getElementById('participaciones-error');
   if (errorElement) {
     if (hayErrores) {
@@ -1978,7 +1971,7 @@ function validarParticipaciones() {
       errorElement.style.display = 'none';
     }
   }
-  
+
   console.log('Resultado validación participaciones:', !hayErrores, 'Errores:', hayErrores);
   console.log('=== FIN VALIDACIÓN DE PARTICIPACIONES ===');
   return !hayErrores;
@@ -1988,21 +1981,21 @@ function validarParticipaciones() {
 function agregarFilaParticipacion() {
   const tbody = document.querySelector('.tabla-participaciones tbody');
   const filas = tbody.querySelectorAll('tr');
-  
+
   // Verificar si ya hay 10 participaciones
   if (filas.length >= 10) {
     alert('No se pueden agregar más de 10 participaciones.');
     return;
   }
-  
+
   const filaId = Date.now() + Math.floor(Math.random() * 1000);
-  
+
   const fila = document.createElement('tr');
   fila.id = `fila-participacion-${filaId}`;
   fila.innerHTML = `
     <td>
       <select id="rol-${filaId}" class="form-control rol-select" required>
-        <option value="">Seleccione un rol</option>
+        <option value="">Selecciona un rol</option>
       </select>
     </td>
     <td>
@@ -2019,9 +2012,9 @@ function agregarFilaParticipacion() {
       </button>
     </td>
   `;
-  
+
   tbody.appendChild(fila);
-  
+
   // Cargar roles y configurar Select2
   Promise.all([
     fetchJSON('rol.json'),
@@ -2029,7 +2022,7 @@ function agregarFilaParticipacion() {
   ]).then(([roles, socios]) => {
     const rolSelect = document.getElementById(`rol-${filaId}`);
     const autorSelect = document.getElementById(`autor-${filaId}`);
-    
+
     // Llenar opciones de rol
     roles.filter(r => r.Rol).forEach(rol => {
       const option = document.createElement('option');
@@ -2037,24 +2030,24 @@ function agregarFilaParticipacion() {
       option.textContent = rol.Rol;
       rolSelect.appendChild(option);
     });
-    
+
     // Inicializar Select2 para los nuevos campos
     setTimeout(() => {
       if (window.$ && window.$.fn.select2) {
         $(rolSelect).select2({
-          placeholder: 'Seleccione un rol',
+          placeholder: 'Selecciona un rol',
           width: '100%',
           allowClear: true
         });
-        
+
         $(autorSelect).select2({
-          placeholder: 'Escriba el nombre del autor para buscar coincidencias...',
+          placeholder: 'Escribe el nombre del autor para buscar coincidencias...',
           width: '100%',
           allowClear: true,
           tags: true,
           minimumInputLength: 2,
           ajax: {
-            transport: function(params, success, failure) {
+            transport: function (params, success, failure) {
               fetchJSON('socios.json').then(sociosRaw => {
                 const term = params.data.q ? params.data.q.toLowerCase() : '';
                 const autoresData = sociosRaw
@@ -2064,9 +2057,9 @@ function agregarFilaParticipacion() {
                     const tieneCorreo = socio["Correo electrónico"] && socio["Correo electrónico"].trim() !== '';
                     const iconoCorreo = tieneCorreo ? '✓' : '✗';
                     const textoCorreo = tieneCorreo ? socio["Correo electrónico"] : 'Sin correo';
-                    
-                    return { 
-                      id: socio["Nombre completo"], 
+
+                    return {
+                      id: socio["Nombre completo"],
                       text: socio["Nombre completo"],
                       correo: socio["Correo electrónico"] || '',
                       tieneCorreo: tieneCorreo,
@@ -2079,10 +2072,10 @@ function agregarFilaParticipacion() {
                 success({ results: autoresData });
               }).catch(failure);
             },
-            processResults: function(data) {
+            processResults: function (data) {
               return { results: data.results };
             },
-            templateResult: function(data) {
+            templateResult: function (data) {
               if (data.html) {
                 return $(data.html);
               }
@@ -2090,17 +2083,17 @@ function agregarFilaParticipacion() {
             }
           },
           language: {
-            inputTooShort: function() {
-              return 'Escriba al menos 2 caracteres para buscar autores.';
+            inputTooShort: function () {
+              return 'Escribe al menos 2 caracteres para buscar autores.';
             },
-            noResults: function() {
+            noResults: function () {
               return 'No se encontró el autor. Puede crear uno nuevo.';
             }
           }
         });
       }
     }, 100);
-    
+
     // Agregar event listeners para validación
     rolSelect.addEventListener('change', validarParticipaciones);
     document.getElementById(`porcentaje-${filaId}`).addEventListener('input', validarParticipaciones);
@@ -2128,12 +2121,12 @@ function restaurarParticipaciones() {
     agregarFilaParticipacion();
     const filas = document.querySelectorAll('.tabla-participaciones tbody tr');
     const ultimaFila = filas[filas.length - 1];
-    
+
     if (ultimaFila) {
       const rolSelect = ultimaFila.querySelector('.rol-select');
       const autorSelect = ultimaFila.querySelector('.autor-select');
       const porcentajeInput = ultimaFila.querySelector('input[type="number"]');
-      
+
       // Esperar a que se carguen las opciones antes de establecer valores
       setTimeout(() => {
         if (rolSelect && participacion.rol) {
@@ -2142,7 +2135,7 @@ function restaurarParticipaciones() {
             $(rolSelect).trigger('change');
           }
         }
-        
+
         if (autorSelect && participacion.autor) {
           const option = new Option(participacion.autor, participacion.autor, true, true);
           autorSelect.appendChild(option);
@@ -2150,7 +2143,7 @@ function restaurarParticipaciones() {
             $(autorSelect).trigger('change');
           }
         }
-        
+
         if (porcentajeInput && participacion.porcentaje) {
           porcentajeInput.value = participacion.porcentaje;
         }
@@ -2163,26 +2156,26 @@ function restaurarParticipaciones() {
 function saveParticipacionesData() {
   const filas = document.querySelectorAll('.tabla-participaciones tbody tr');
   const participaciones = [];
-  
+
   // Obtener la lista de socios para buscar correos
   fetchJSON('socios.json').then(socios => {
     filas.forEach(fila => {
       const rol = fila.querySelector('.rol-select')?.value || '';
       const autor = fila.querySelector('.autor-select')?.value || '';
       const porcentaje = fila.querySelector('input[type="number"]')?.value || '';
-      
+
       if (rol && autor && porcentaje) {
         // Buscar el correo del autor en la lista de socios
         const socioEncontrado = socios.find(socio => socio["Nombre completo"] === autor);
         const correo = socioEncontrado ? socioEncontrado["Correo electrónico"] : '';
-        
+
         participaciones.push({ rol, autor, porcentaje, correo });
       }
     });
-    
+
     formData.participaciones = participaciones;
     console.log('Participaciones guardadas con correos:', participaciones);
-    
+
     // Actualizar la sección de notificación a participantes
     actualizarSeccionNotificacion();
   }).catch(error => {
@@ -2192,12 +2185,12 @@ function saveParticipacionesData() {
       const rol = fila.querySelector('.rol-select')?.value || '';
       const autor = fila.querySelector('.autor-select')?.value || '';
       const porcentaje = fila.querySelector('input[type="number"]')?.value || '';
-      
+
       if (rol && autor && porcentaje) {
         participaciones.push({ rol, autor, porcentaje, correo: '' });
       }
     });
-    
+
     formData.participaciones = participaciones;
     console.log('Participaciones guardadas sin correos:', participaciones);
   });
@@ -2223,7 +2216,7 @@ async function renderStepDatosTecnicos(container) {
         </svg>
       </div>
       <div class="note-content">
-        <strong>Complete los datos técnicos de la obra.</strong> Esta información es importante para la catalogación y clasificación de la obra audiovisual.
+        <strong>Completa los datos técnicos de la obra.</strong> Esta información es importante para la catalogación y clasificación de la obra audiovisual.
       </div>
     </div>
     
@@ -2233,7 +2226,7 @@ async function renderStepDatosTecnicos(container) {
       <div class="form-group required">
         <label for="sonido">Sonido</label>
         <select id="sonido" name="sonido">
-          <option value="">Seleccione...</option>
+          <option value="">Selecciona...</option>
           ${sonidos.filter(s => s.Sonido).map(s => `<option value="${s.Sonido}">${s.Sonido}</option>`).join('')}
         </select>
       </div>
@@ -2241,7 +2234,7 @@ async function renderStepDatosTecnicos(container) {
       <div class="form-group required">
         <label for="color">Color</label>
         <select id="color" name="color">
-          <option value="">Seleccione...</option>
+          <option value="">Selecciona...</option>
           ${colores.filter(c => c.Color).map(c => `<option value="${c.Color}">${c.Color}</option>`).join('')}
         </select>
       </div>
@@ -2249,7 +2242,7 @@ async function renderStepDatosTecnicos(container) {
       <div class="form-group required">
         <label for="caracteristicas_tecnicas">Características técnicas</label>
         <select id="caracteristicas_tecnicas" name="caracteristicas_tecnicas">
-          <option value="">Seleccione...</option>
+          <option value="">Selecciona...</option>
           ${caracteristicas.filter(c => c['Caracteristicas técnicas']).map(c => `<option value="${c['Caracteristicas técnicas']}">${c['Caracteristicas técnicas']}</option>`).join('')}
         </select>
       </div>
@@ -2257,16 +2250,16 @@ async function renderStepDatosTecnicos(container) {
       <div class="form-group required">
         <label for="destino">Destino</label>
         <select id="destino" name="destino">
-          <option value="">Seleccione...</option>
+          <option value="">Selecciona...</option>
           ${destinos.filter(d => d.Destino).map(d => `<option value="${d.Destino}">${d.Destino}</option>`).join('')}
         </select>
       </div>
     </div>
   `;
-  
+
   // Inicializar Select2 en los selects
   if (window.$ && window.$.fn.select2) {
-    $(container).find('select').each(function() {
+    $(container).find('select').each(function () {
       $(this).select2({
         placeholder: $(this).find('option:first').text(),
         width: '100%',
@@ -2283,14 +2276,14 @@ async function renderStepEpisodios(container) {
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
   const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
-  
+
   console.log('Debug episodios:', {
     formatoField: formatoField,
     formatoSeleccionado: formatoSeleccionado,
     esSerializada: esSerializada,
     formData: formData
   });
-  
+
   if (!esSerializada) {
     // Mostrar sección bloqueada
     container.innerHTML = `
@@ -2309,14 +2302,14 @@ async function renderStepEpisodios(container) {
     `;
     return;
   }
-  
+
   // Si es serializada, mostrar el formulario de episodios con bloques dinámicos
   container.innerHTML = `
     <div class="wizard-section">
       <div class="section-header">
         <h2>Bloques de Episodios</h2>
         <p class="section-description">
-          Registre la información de los episodios de su obra serializada. Puede crear múltiples bloques para agrupar episodios con características similares.
+          Registra la información de los episodios de tu obra serializada. Puedes crear múltiples bloques para agrupar episodios que tengan las mismas características (autores, roles y participaciones).
         </p>
         <button type="button" class="btn btn-primary" id="addBloqueEpisodios">
           <i class="fas fa-plus"></i> Agregar Bloque de Episodios
@@ -2328,13 +2321,28 @@ async function renderStepEpisodios(container) {
       </div>
     </div>
   `;
-  
+
   // Inicializar la funcionalidad de bloques de episodios
   inicializarBloquesEpisodios();
-  
-  // Restaurar bloques de episodios si existen datos guardados
+
+  // Limpiar datos de episodios si se está cambiando de formato no serializado a serializado
+  // Esto evita que se restauren datos incorrectos de formatos anteriores
+  if (formData.stepEpisodios && formData.stepEpisodios.length === 1 && 
+      formData.stepEpisodios[0].temporada === '' && 
+      formData.stepEpisodios[0].numero === '') {
+    // Estos son datos de obra no serializada, limpiarlos
+    delete formData.stepEpisodios;
+  }
+
+  // Restaurar bloques de episodios si existen datos guardados válidos
   if (formData.stepEpisodios && formData.stepEpisodios.length > 0) {
     restoreStepEpisodios(container);
+  } else {
+    // Si no hay datos guardados, crear automáticamente el primer bloque
+    // Esto asegura que siempre haya al menos un bloque disponible
+    setTimeout(() => {
+      agregarBloqueEpisodios();
+    }, 100);
   }
 }
 
@@ -2344,62 +2352,62 @@ function validateStepEpisodios() {
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
   const obrasSerializadas = ['Serie', 'Telenovela'];
   const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
-  
+
   // Si no es serializada, no hay nada que validar
   if (!esSerializada) {
     return true;
   }
-  
+
   // Verificar que haya al menos un bloque de episodios
   const bloques = document.querySelectorAll('.bloque-episodios');
   if (bloques.length === 0) {
     showMessage('Debe crear al menos un bloque de episodios.', true);
     return false;
   }
-  
+
   let isValid = true;
-  
+
   // Validar cada bloque
   bloques.forEach((bloque, index) => {
     const bloqueId = bloque.id.replace('bloque-episodios-', '');
-    
+
     // Validar intervalo de episodios
     const desdeEpisodio = parseInt(bloque.querySelector('.desde-episodio').value) || 0;
     const hastaEpisodio = parseInt(bloque.querySelector('.hasta-episodio').value) || 0;
-    
+
     if (desdeEpisodio === 0 || hastaEpisodio === 0) {
       showMessage(`El bloque #${index + 1} debe tener un intervalo de episodios válido.`, true);
       isValid = false;
     }
-    
+
     // Eliminada la validación molesta de episodio final menor al inicial
 
-    
+
     // Verificar si hay participaciones guardadas para este bloque específico
-    const hayParticipacionesEnBloque = participacionesPorBloque[bloqueId] && 
-                                       Array.isArray(participacionesPorBloque[bloqueId]) && 
-                                       participacionesPorBloque[bloqueId].length > 0;
-    
+    const hayParticipacionesEnBloque = participacionesPorBloque[bloqueId] &&
+      Array.isArray(participacionesPorBloque[bloqueId]) &&
+      participacionesPorBloque[bloqueId].length > 0;
+
     // Solo validar líneas individuales si no hay participaciones guardadas en el modal para este bloque
     if (!hayParticipacionesEnBloque) {
       const lineasParticipacion = bloque.querySelectorAll('.linea-participacion');
       if (lineasParticipacion.length === 0) {
-        showMessage(`El bloque #${index + 1} debe tener al menos una línea de participación. Puede usar "Gestionar participaciones" para aplicar participaciones a todos los episodios.`, true);
+        showMessage(`El bloque #${index + 1} debe tener al menos una línea de participación. Haz clic "Gestionar participaciones" para registrar todas las participaciones del bloque de episodios.`, true);
         isValid = false;
       }
-      
+
       // Validar porcentajes de participación solo si hay líneas individuales
       const sumas = {};
       lineasParticipacion.forEach(linea => {
         const rol = linea.querySelector('.rol-participacion').value;
         const porcentaje = parseFloat(linea.querySelector('.porcentaje-participacion').value) || 0;
-        
+
         if (rol && porcentaje > 0) {
           if (!sumas[rol]) sumas[rol] = 0;
           sumas[rol] += porcentaje;
         }
       });
-      
+
       for (const rol in sumas) {
         if (sumas[rol] > 100.001) {
           showMessage(`En el bloque #${index + 1}, la suma de participación para el rol "${rol}" supera el 100%.`, true);
@@ -2408,7 +2416,7 @@ function validateStepEpisodios() {
       }
     }
   });
-  
+
   return isValid;
 }
 
@@ -2416,7 +2424,7 @@ function validateStepEpisodios() {
 function inicializarBloquesEpisodios() {
   const addBloqueBtn = document.getElementById('addBloqueEpisodios');
   if (addBloqueBtn) {
-    addBloqueBtn.addEventListener('click', function() {
+    addBloqueBtn.addEventListener('click', function () {
       agregarBloqueEpisodios();
     });
   }
@@ -2427,28 +2435,28 @@ function restoreStepEpisodios(container) {
   console.log('=== INICIANDO RESTAURACIÓN DE EPISODIOS ===');
   console.log('Datos de episodios a restaurar:', formData.stepEpisodios);
   console.log('Contenedor:', container);
-  
+
   if (!formData.stepEpisodios || formData.stepEpisodios.length === 0) {
     console.log('No hay bloques de episodios para restaurar');
     return;
   }
-  
+
   const bloquesContainer = document.getElementById('bloquesEpisodiosContainer');
   if (!bloquesContainer) {
     console.error('No se encontró el contenedor de bloques de episodios');
     return;
   }
-  
+
   // Verificar si ya hay bloques en el DOM para evitar duplicación
   const bloquesExistentes = bloquesContainer.querySelectorAll('.bloque-episodios-colapsable');
   if (bloquesExistentes.length > 0) {
     console.log('Ya existen bloques en el DOM, evitando duplicación');
     return;
   }
-  
+
   // Limpiar el contenedor
   bloquesContainer.innerHTML = '';
-  
+
   // Agrupar episodios por bloque basándose en temporada, desde y hasta
   const bloquesAgrupados = new Map();
   formData.stepEpisodios.forEach((episodioData) => {
@@ -2463,13 +2471,13 @@ function restoreStepEpisodios(container) {
       });
     }
   });
-  
+
   // Restaurar cada bloque agrupado
   let bloqueIndex = 1;
   bloquesAgrupados.forEach((bloqueData) => {
     const bloqueId = bloqueIndex;
     contadorBloquesEpisodios = Math.max(contadorBloquesEpisodios, bloqueId);
-    
+
     // Restaurar datos en las variables globales
     if (bloqueData.participaciones && bloqueData.participaciones.length > 0) {
       participacionesPorBloque[bloqueId] = bloqueData.participaciones;
@@ -2477,9 +2485,9 @@ function restoreStepEpisodios(container) {
     if (bloqueData.titulosAlternativos && bloqueData.titulosAlternativos.length > 0) {
       titulosPorBloque[bloqueId] = bloqueData.titulosAlternativos;
     }
-    
+
     bloqueIndex++;
-    
+
     // Crear el HTML del bloque con la misma estructura que agregarBloqueEpisodios
     const bloqueHTML = `
       <div class="bloque-episodios-colapsable" id="bloque-episodios-colapsable-${bloqueId}">
@@ -2558,12 +2566,12 @@ function restoreStepEpisodios(container) {
         </div>
       </div>
     `;
-    
+
     bloquesContainer.insertAdjacentHTML('beforeend', bloqueHTML);
-    
+
     // Configurar eventos del bloque
     configurarEventosBloqueEpisodios(bloqueId);
-    
+
     // Configurar eventos de colapso
     const bloqueColapsable = document.getElementById(`bloque-episodios-colapsable-${bloqueId}`);
     const headerColapsable = bloqueColapsable.querySelector('.bloque-episodios-header');
@@ -2578,10 +2586,10 @@ function restoreStepEpisodios(container) {
         toggleBloqueContent(contentColapsable, toggleBtn);
       });
     }
-    
+
     // Generar tabla automáticamente al restaurar el bloque
     generarTablaEpisodios(bloqueId);
-    
+
     // Si hay datos de intervalo, generar episodios
     if (bloqueData.desde && bloqueData.hasta) {
       setTimeout(() => {
@@ -2597,11 +2605,11 @@ function restoreStepEpisodios(container) {
 // Función auxiliar para restaurar los datos específicos de cada episodio
 function restaurarDatosEpisodios(bloqueId, bloqueData) {
   console.log(`Restaurando datos de episodios del bloque ${bloqueId}:`, bloqueData);
-  
+
   // Restaurar los datos de cada episodio
   bloqueData.episodios.forEach(episodioData => {
     const episodioNum = episodioData.numero;
-    
+
     // Restaurar título principal
     if (episodioData.titulo) {
       const tituloInput = document.getElementById(`titulo-${bloqueId}-${episodioNum}`);
@@ -2610,7 +2618,7 @@ function restaurarDatosEpisodios(bloqueId, bloqueData) {
         actualizarPreviewTitulo(bloqueId, episodioNum, episodioData.titulo);
       }
     }
-    
+
     // Restaurar títulos alternativos
     if (episodioData.titulosAlternativos && episodioData.titulosAlternativos.length > 0) {
       episodioData.titulosAlternativos.forEach((titulo, index) => {
@@ -2625,20 +2633,20 @@ function restaurarDatosEpisodios(bloqueId, bloqueData) {
       actualizarContadorTitulos(bloqueId, episodioNum);
     }
   });
-  
+
   // Restaurar participaciones del bloque (no por episodio individual)
   if (bloqueData.participaciones && bloqueData.participaciones.length > 0) {
     bloqueData.participaciones.forEach((participacion, index) => {
       if (index > 0) { // La primera línea ya existe
         agregarLineaParticipacion(bloqueId);
       }
-      
+
       const participacionContainer = document.querySelector(`#bloque-episodios-${bloqueId} .participaciones-container .participacion-item:nth-child(${index + 1})`);
       if (participacionContainer) {
         const rolSelect = participacionContainer.querySelector('.rol-select');
         const autorInput = participacionContainer.querySelector('.autor-input');
         const porcentajeInput = participacionContainer.querySelector('.porcentaje-input');
-        
+
         if (rolSelect) rolSelect.value = participacion.rol || '';
         if (autorInput) autorInput.value = participacion.autor || '';
         if (porcentajeInput) porcentajeInput.value = participacion.porcentaje || '';
@@ -2651,7 +2659,7 @@ function restaurarDatosEpisodios(bloqueId, bloqueData) {
 function agregarBloqueEpisodios() {
   contadorBloquesEpisodios++;
   const bloquesContainer = document.getElementById('bloquesEpisodiosContainer');
-  
+
   const bloqueHTML = `
     <div class="bloque-episodios-colapsable" id="bloque-episodios-colapsable-${contadorBloquesEpisodios}">
       <div class="bloque-episodios-header">
@@ -2692,12 +2700,12 @@ function agregarBloqueEpisodios() {
           </div>
           <div class="form-group">
             <label>Desde episodio</label>
-            <input type="number" class="desde-episodio" min="1" style="background:#eee;" placeholder="Seleccione temporada primero" disabled>
+            <input type="number" class="desde-episodio" min="1" style="background:#eee;" placeholder="Registre primero la temporada" disabled>
             <div class="input-hint hint-desde-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar temporada para habilitar este campo.</div>
           </div>
           <div class="form-group">
             <label>Hasta episodio</label>
-            <input type="number" class="hasta-episodio" min="1" style="background:#eee;" placeholder="Seleccione 'Desde episodio' primero" disabled>
+            <input type="number" class="hasta-episodio" min="1" style="background:#eee;" placeholder="Registra primero el episodio de inicio del bloque" disabled>
             <div class="input-hint hint-hasta-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar 'Desde episodio' para habilitar este campo.</div>
           </div>
         </div>
@@ -2728,12 +2736,12 @@ function agregarBloqueEpisodios() {
       </div>
     </div>
   `;
-  
+
   bloquesContainer.insertAdjacentHTML('beforeend', bloqueHTML);
-  
+
   // Configurar eventos del nuevo bloque
   configurarEventosBloqueEpisodios(contadorBloquesEpisodios);
-  
+
   // Lógica de colapso para el bloque completo
   const bloqueColapsable = document.getElementById(`bloque-episodios-colapsable-${contadorBloquesEpisodios}`);
   const headerColapsable = bloqueColapsable.querySelector('.bloque-episodios-header');
@@ -2756,9 +2764,6 @@ function agregarBloqueEpisodios() {
     nuevoBloque.classList.remove('bloque-episodios-entering');
   }, 300);
 
-  // Generar tabla automáticamente al crear el bloque
-  generarTablaEpisodios(contadorBloquesEpisodios);
-
   // Forzar los campos a vacío para evitar que el navegador muestre 0 por defecto
   const desdeInput = nuevoBloque.querySelector('.desde-episodio');
   const hastaInput = nuevoBloque.querySelector('.hasta-episodio');
@@ -2779,7 +2784,7 @@ function agregarBloqueEpisodios() {
   const hintDesde = nuevoBloque.querySelector('.hint-desde-episodio');
   const hintHasta = nuevoBloque.querySelector('.hint-hasta-episodio');
   if (temporadaInput && desdeInput) {
-    temporadaInput.addEventListener('input', function() {
+    temporadaInput.addEventListener('input', function () {
       if (temporadaInput.value && parseInt(temporadaInput.value) > 0) {
         desdeInput.disabled = false;
         desdeInput.style.background = '';
@@ -2789,19 +2794,19 @@ function agregarBloqueEpisodios() {
         desdeInput.value = '';
         desdeInput.disabled = true;
         desdeInput.style.background = '#eee';
-        desdeInput.placeholder = 'Seleccione temporada primero';
+        desdeInput.placeholder = 'Registra primero la temporada';
         if (hintDesde) hintDesde.style.display = '';
         hastaInput.value = '';
         hastaInput.disabled = true;
         hastaInput.style.background = '#eee';
-        hastaInput.placeholder = "Seleccione 'Desde episodio' primero";
+        hastaInput.placeholder = "Registra primero el episodio de inicio del bloque";
         if (hintHasta) hintHasta.style.display = '';
       }
     });
   }
   // Habilitar Hasta episodio solo si Desde episodio tiene valor
   if (desdeInput && hastaInput) {
-    desdeInput.addEventListener('input', function() {
+    desdeInput.addEventListener('input', function () {
       if (desdeInput.value && parseInt(desdeInput.value) > 0) {
         hastaInput.disabled = false;
         hastaInput.style.background = '';
@@ -2811,7 +2816,7 @@ function agregarBloqueEpisodios() {
         hastaInput.value = '';
         hastaInput.disabled = true;
         hastaInput.style.background = '#eee';
-        hastaInput.placeholder = "Seleccione 'Desde episodio' primero";
+        hastaInput.placeholder = "Registra primero el episodio de inicio del bloque";
         if (hintHasta) hintHasta.style.display = '';
       }
     });
@@ -2850,22 +2855,25 @@ function agregarBloqueEpisodios() {
     hastaInput.addEventListener('input', autoGen);
   }
 
+  // Generar tabla automáticamente al crear el bloque (después de configurar eventos)
+  generarTablaEpisodios(contadorBloquesEpisodios);
+
   // Evento para botón importar títulos
   const btnImportar = nuevoBloque.querySelector('.btn-importar-titulos');
   const inputImportar = nuevoBloque.querySelector('.input-importar-titulos');
   if (btnImportar && inputImportar) {
     btnImportar.addEventListener('click', () => {
-       const bloque = document.getElementById(`bloque-episodios-${contadorBloquesEpisodios}`);
-       if (!bloque) return;
-       const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
-       const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
-       if (!desde || !hasta || desde > hasta) {
-         alert('Por favor, registre primero un intervalo válido de episodios antes de importar títulos.');
-         return;
-       }
-       inputImportar.click();
-     });
-    inputImportar.addEventListener('change', function(e) {
+      const bloque = document.getElementById(`bloque-episodios-${contadorBloquesEpisodios}`);
+      if (!bloque) return;
+      const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
+      const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
+      if (!desde || !hasta || desde > hasta) {
+        alert('Por favor, registra primero un intervalo válido de episodios antes de importar títulos.');
+        return;
+      }
+      inputImportar.click();
+    });
+    inputImportar.addEventListener('change', function (e) {
       if (e.target.files && e.target.files[0]) {
         importarTitulosDesdeArchivo(e.target.files[0], contadorBloquesEpisodios);
         e.target.value = '';
@@ -2877,16 +2885,16 @@ function agregarBloqueEpisodios() {
   const btnPegar = nuevoBloque.querySelector('.btn-pegar-titulos');
   if (btnPegar) {
     btnPegar.addEventListener('click', () => {
-       const bloque = document.getElementById(`bloque-episodios-${contadorBloquesEpisodios}`);
-       if (!bloque) return;
-       const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
-       const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
-       if (!desde || !hasta || desde > hasta) {
-         alert('Por favor, registre primero un intervalo válido de episodios antes de pegar títulos.');
-         return;
-       }
-       mostrarModalPegarTitulos(contadorBloquesEpisodios);
-     });
+      const bloque = document.getElementById(`bloque-episodios-${contadorBloquesEpisodios}`);
+      if (!bloque) return;
+      const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
+      const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
+      if (!desde || !hasta || desde > hasta) {
+        alert('Por favor, registra primero un intervalo válido de episodios antes de pegar títulos.');
+        return;
+      }
+      mostrarModalPegarTitulos(contadorBloquesEpisodios);
+    });
   }
 }
 
@@ -2894,37 +2902,37 @@ function agregarBloqueEpisodios() {
 function configurarEventosBloqueEpisodios(bloqueId) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   // Botón eliminar bloque
   const btnEliminar = bloque.querySelector('.btn-eliminar');
   if (btnEliminar) {
-    btnEliminar.addEventListener('click', function() {
+    btnEliminar.addEventListener('click', function () {
       eliminarBloqueEpisodios(bloqueId);
     });
   }
-  
+
   // Botón agregar línea de participación
   const btnAgregarLinea = bloque.querySelector('.btn-agregar-linea');
   if (btnAgregarLinea) {
-    btnAgregarLinea.addEventListener('click', function() {
+    btnAgregarLinea.addEventListener('click', function () {
       agregarLineaParticipacion(bloqueId);
     });
   }
-  
+
   // Evento para botón importar títulos
   const btnImportar = bloque.querySelector('.btn-importar-titulos');
   const inputImportar = bloque.querySelector('.input-importar-titulos');
   if (btnImportar && inputImportar) {
     btnImportar.addEventListener('click', () => {
-       const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
-       const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
-       if (!desde || !hasta || desde > hasta) {
-         alert('Por favor, registre primero un intervalo válido de episodios antes de importar títulos.');
-         return;
-       }
-       inputImportar.click();
-     });
-    inputImportar.addEventListener('change', function(e) {
+      const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
+      const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
+      if (!desde || !hasta || desde > hasta) {
+        alert('Por favor, registra primero un intervalo válido de episodios antes de importar títulos.');
+        return;
+      }
+      inputImportar.click();
+    });
+    inputImportar.addEventListener('change', function (e) {
       if (e.target.files && e.target.files[0]) {
         importarTitulosDesdeArchivo(e.target.files[0], bloqueId);
         e.target.value = '';
@@ -2936,14 +2944,14 @@ function configurarEventosBloqueEpisodios(bloqueId) {
   const btnPegar = bloque.querySelector('.btn-pegar-titulos');
   if (btnPegar) {
     btnPegar.addEventListener('click', () => {
-       const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
-       const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
-       if (!desde || !hasta || desde > hasta) {
-         alert('Por favor, registre primero un intervalo válido de episodios antes de pegar títulos.');
-         return;
-       }
-       mostrarModalPegarTitulos(bloqueId);
-     });
+      const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
+      const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
+      if (!desde || !hasta || desde > hasta) {
+        alert('Por favor, registra primero un intervalo válido de episodios antes de pegar títulos.');
+        return;
+      }
+      mostrarModalPegarTitulos(bloqueId);
+    });
   }
 
   // Eventos para campos de intervalo (ya agregados en agregarBloqueEpisodios)
@@ -2988,23 +2996,23 @@ function eliminarBloqueEpisodios(bloqueId) {
 function generarTablaEpisodios(bloqueId) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const desdeEpisodio = parseInt(bloque.querySelector('.desde-episodio').value) || 0;
   const hastaEpisodio = parseInt(bloque.querySelector('.hasta-episodio').value) || 0;
-  
+
   // Eliminada la advertencia molesta de episodio final menor al inicial
   if (hastaEpisodio < desdeEpisodio) {
     return;
   }
-  
+
   if ((hastaEpisodio - desdeEpisodio + 1) > 300) {
     alert('Por favor, limita el rango a un máximo de 300 episodios por bloque.');
     return;
   }
-  
+
   // Generar episodios individuales
   generarEpisodiosIndividuales(bloqueId, desdeEpisodio, hastaEpisodio);
-  
+
   // Mostrar la tabla
   const tablaContainer = bloque.querySelector('.tabla-episodios-container');
   if (tablaContainer) {
@@ -3016,10 +3024,10 @@ function generarTablaEpisodios(bloqueId) {
 function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const episodiosContainer = bloque.querySelector('.episodios-individuales');
   if (!episodiosContainer) return;
-  
+
   // Validar intervalo antes de generar episodios
   if (desde <= 0 || hasta < desde) {
     episodiosContainer.innerHTML = '';
@@ -3038,10 +3046,10 @@ function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
   `;
 
   const episodiosList = episodiosContainer.querySelector('.episodios-list');
-  
+
   console.log(`Generando episodios desde ${desde} hasta ${hasta}`);
   console.log('episodiosList encontrado:', episodiosList);
-  
+
   for (let i = desde; i <= hasta; i++) {
     console.log(`Creando episodio ${i}`);
     const episodioHTML = `
@@ -3064,7 +3072,7 @@ function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
         </div>
       </div>
     `;
-    
+
     episodiosList.insertAdjacentHTML('beforeend', episodioHTML);
     console.log(`Episodio ${i} insertado. Total episodios en lista:`, episodiosList.children.length);
   }
@@ -3084,7 +3092,7 @@ function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
       toggleIntervaloContent(intervaloContent, intervaloToggleBtn);
     });
   }
-  
+
   // Configurar eventos de los episodios
   configurarEventosEpisodios(bloqueId);
 }
@@ -3093,24 +3101,24 @@ function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
 function configurarEventosEpisodios(bloqueId) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   // Eventos para expandir/contraer episodios
   const headers = bloque.querySelectorAll('.episodio-header');
   headers.forEach(header => {
-    header.addEventListener('click', function() {
+    header.addEventListener('click', function () {
       const episodioNum = this.getAttribute('data-episodio');
       toggleEpisodio(bloqueId, episodioNum);
     });
   });
-  
+
   // Eventos para títulos de episodios
   const titulosEpisodios = bloque.querySelectorAll('.titulo-episodio');
   titulosEpisodios.forEach(titulo => {
-    titulo.addEventListener('input', function() {
+    titulo.addEventListener('input', function () {
       actualizarPreviewTitulo(bloqueId, this.getAttribute('data-episodio'), this.value);
     });
   });
-  
+
 
 }
 
@@ -3118,11 +3126,11 @@ function configurarEventosEpisodios(bloqueId) {
 function toggleEpisodio(bloqueId, episodioNum) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const header = bloque.querySelector(`.episodio-header[data-episodio="${episodioNum}"]`);
   const content = bloque.querySelector(`.episodio-content[data-episodio="${episodioNum}"]`);
   const icon = header.querySelector('.btn-toggle-episodio i');
-  
+
   content.classList.toggle('collapsed');
   icon.style.transform = content.classList.contains('collapsed') ? 'rotate(-90deg)' : '';
   icon.className = content.classList.contains('collapsed') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
@@ -3148,7 +3156,7 @@ function toggleBloqueContent(content, toggleBtn) {
 function actualizarPreviewTitulo(bloqueId, episodioNum, titulo) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const preview = bloque.querySelector(`.episodio-header[data-episodio="${episodioNum}"] .episodio-titulo-preview`);
   if (preview) {
     preview.textContent = titulo || 'Sin título';
@@ -3159,10 +3167,10 @@ function actualizarPreviewTitulo(bloqueId, episodioNum, titulo) {
 function agregarTituloAlternativo(bloqueId, episodioNum) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const lista = bloque.querySelector(`.titulos-alternativos-lista[data-episodio="${episodioNum}"]`);
   if (!lista) return;
-  
+
   const tituloAltHTML = `
     <div class="titulo-alternativo">
       <div class="form-row">
@@ -3189,19 +3197,19 @@ function agregarTituloAlternativo(bloqueId, episodioNum) {
       </div>
     </div>
   `;
-  
+
   lista.insertAdjacentHTML('beforeend', tituloAltHTML);
-  
+
   // Configurar eventos del nuevo título alternativo
   const nuevoTitulo = lista.lastElementChild;
   const btnEliminar = nuevoTitulo.querySelector('.btn-eliminar-titulo');
   if (btnEliminar) {
-    btnEliminar.addEventListener('click', function() {
+    btnEliminar.addEventListener('click', function () {
       nuevoTitulo.remove();
       actualizarContadorTitulos(bloqueId, episodioNum);
     });
   }
-  
+
   // Inicializar Select2 para el idioma
   const idiomaSelect = nuevoTitulo.querySelector('.titulo-alt-idioma');
   if (idiomaSelect && window.$ && window.$.fn.select2) {
@@ -3211,7 +3219,7 @@ function agregarTituloAlternativo(bloqueId, episodioNum) {
       allowClear: true
     });
   }
-  
+
   actualizarContadorTitulos(bloqueId, episodioNum);
 }
 
@@ -3219,16 +3227,16 @@ function agregarTituloAlternativo(bloqueId, episodioNum) {
 function actualizarContadorTitulos(bloqueId, episodioNum) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const header = bloque.querySelector(`.episodio-header[data-episodio="${episodioNum}"]`);
   if (!header) return;
-  
+
   const contador = header.querySelector('.episodio-contador-titulos');
   if (!contador) return;
-  
+
   const titulosAlternativos = bloque.querySelectorAll(`.episodio-content[data-episodio="${episodioNum}"] .titulo-alternativo`);
   const cantidad = titulosAlternativos.length;
-  
+
   contador.textContent = `${cantidad} título${cantidad !== 1 ? 's' : ''} traducido${cantidad !== 1 ? 's' : ''}`;
 }
 
@@ -3236,17 +3244,17 @@ function actualizarContadorTitulos(bloqueId, episodioNum) {
 function agregarLineaParticipacion(bloqueId) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const lineasContainer = bloque.querySelector('.lineas-participacion');
   if (!lineasContainer) return;
-  
+
   // Verificar si ya hay 10 participaciones
   const lineasExistentes = lineasContainer.querySelectorAll('.linea-participacion');
   if (lineasExistentes.length >= 10) {
     alert('No se pueden agregar más de 10 participaciones por episodio.');
     return;
   }
-  
+
   const lineaHTML = `
     <div class="linea-participacion">
       <div class="form-row">
@@ -3279,18 +3287,18 @@ function agregarLineaParticipacion(bloqueId) {
       </div>
     </div>
   `;
-  
+
   lineasContainer.insertAdjacentHTML('beforeend', lineaHTML);
-  
+
   // Configurar eventos de la nueva línea
   const nuevaLinea = lineasContainer.lastElementChild;
   const btnEliminar = nuevaLinea.querySelector('.btn-eliminar-linea');
   if (btnEliminar) {
-    btnEliminar.addEventListener('click', function() {
+    btnEliminar.addEventListener('click', function () {
       nuevaLinea.remove();
     });
   }
-  
+
   // Inicializar Select2 para el autor
   const autorSelect = nuevaLinea.querySelector('.autor-participacion');
   if (autorSelect && window.$ && window.$.fn.select2) {
@@ -3307,10 +3315,10 @@ function agregarLineaParticipacion(bloqueId) {
 function validarIntervaloEpisodios(bloqueId) {
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const desdeEpisodio = parseInt(bloque.querySelector('.desde-episodio').value) || 0;
   const hastaEpisodio = parseInt(bloque.querySelector('.hasta-episodio').value) || 0;
-  
+
   // Eliminada la advertencia molesta de episodio final menor al inicial
   if (hastaEpisodio < desdeEpisodio) {
     bloque.querySelector('.hasta-episodio').value = desdeEpisodio;
@@ -3329,14 +3337,14 @@ function abrirModalTitulosEpisodio() {
   console.log('Abriendo modal de títulos de episodio');
   cargarOpcionesEpisodios();
   console.log('Episodios disponibles:', window.episodiosDisponibles);
-  
+
   // Cargar datos específicos del bloque actual
   if (bloqueActualModal && titulosPorBloque[bloqueActualModal]) {
     titulosEpisodioData = [...titulosPorBloque[bloqueActualModal]];
   } else {
     titulosEpisodioData = [];
   }
-  
+
   renderTablaTitulosEpisodio();
   document.getElementById('modalTitulosEpisodio').style.display = 'flex';
 }
@@ -3346,7 +3354,7 @@ function cerrarModalTitulosEpisodio() {
   if (bloqueActualModal) {
     titulosPorBloque[bloqueActualModal] = [...titulosEpisodioData];
   }
-  
+
   document.getElementById('modalTitulosEpisodio').style.display = 'none';
 }
 
@@ -3434,13 +3442,13 @@ function renderTablaTitulosEpisodio() {
 
 async function cargarOpcionesIdiomaYPais(selectIdioma, selectPais, row) {
   const idiomas = await fetchJSON('idioma.json');
-  selectIdioma.innerHTML = '<option value="">Seleccione...</option>' + idiomas.filter(i => i.Idioma).map(i => `<option value="${i.Idioma}" ${row.idioma===i.Idioma?'selected':''}>${i.Idioma}</option>`).join('');
+  selectIdioma.innerHTML = '<option value="">Seleccione...</option>' + idiomas.filter(i => i.Idioma).map(i => `<option value="${i.Idioma}" ${row.idioma === i.Idioma ? 'selected' : ''}>${i.Idioma}</option>`).join('');
   const paises = await fetchJSON('paises.json');
-  selectPais.innerHTML = '<option value="">Seleccione...</option>' + paises.map(p => `<option value="${p["Nombre del país"]}" ${row.pais===p["Nombre del país"]?'selected':''}>${p["Nombre del país"]}</option>`).join('');
+  selectPais.innerHTML = '<option value="">Seleccione...</option>' + paises.map(p => `<option value="${p["Nombre del país"]}" ${row.pais === p["Nombre del país"] ? 'selected' : ''}>${p["Nombre del país"]}</option>`).join('');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.body.addEventListener('click', function(e) {
+  document.body.addEventListener('click', function (e) {
     // Manejadores para el modal de ayuda de importación
     if (e.target.closest('.btn-ayuda-importar')) {
       document.getElementById('modalAyudaImportar').style.display = 'flex';
@@ -3451,7 +3459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.closest('.btn-gestionar-titulos')) {
       const boton = e.target.closest('.btn-gestionar-titulos');
       bloqueActualModal = boton.getAttribute('data-bloque-id');
-      
+
       // Validar que existe un intervalo válido antes de abrir el modal
       if (bloqueActualModal) {
         // Caso de bloques dinámicos con data-bloque-id
@@ -3460,7 +3468,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
           const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
           if (!desde || !hasta || desde > hasta) {
-            alert('Por favor, registre primero un intervalo válido de episodios antes de gestionar títulos.');
+            alert('Por favor, registra primero un intervalo válido de episodios antes de gestionar títulos.');
             return;
           }
         }
@@ -3472,7 +3480,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
       }
-      
+
       console.log('Abriendo modal de títulos para bloque:', bloqueActualModal);
       abrirModalTitulosEpisodio();
     }
@@ -3503,18 +3511,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.closest('.btn-gestionar-participaciones')) {
       const boton = e.target.closest('.btn-gestionar-participaciones');
       bloqueActualModal = boton.getAttribute('data-bloque-id');
-      
+
       // Validar que existe un intervalo válido antes de abrir el modal
       const bloque = document.getElementById(`bloque-episodios-${bloqueActualModal}`);
       if (bloque) {
         const desde = parseInt(bloque.querySelector('.desde-episodio')?.value || '0');
         const hasta = parseInt(bloque.querySelector('.hasta-episodio')?.value || '0');
         if (!desde || !hasta || desde > hasta) {
-          alert('Por favor, registre primero un intervalo válido de episodios antes de gestionar participaciones.');
+          alert('Por favor, registra primero un intervalo válido de episodios antes de gestionar participaciones.');
           return;
         }
       }
-      
+
       console.log('Abriendo modal de participaciones para bloque:', bloqueActualModal);
       restaurarParticipacionesModal();
       document.getElementById('modalParticipaciones').style.display = 'flex';
@@ -3530,6 +3538,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Eliminar fila de participación en el modal
     if (e.target.closest('.btn-eliminar-participacion')) {
       e.target.closest('tr').remove();
+      // Actualizar el cálculo después de eliminar una fila
+      validarParticipacionesModal();
     }
     // Guardar participaciones desde el modal
     if (e.target.closest('.btn-guardar-participaciones')) {
@@ -3537,75 +3547,86 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si hay error, no guardar y mostrar mensaje
         return;
       }
-      
+
       console.log('=== GUARDANDO PARTICIPACIONES DESDE MODAL ===');
       console.log('Bloque actual del modal:', bloqueActualModal);
-      
+
       // Obtener las participaciones del modal
       const participacionesModal = obtenerDatosParticipacionesModal();
       console.log('Participaciones del modal:', participacionesModal);
-      
+
       // Guardar participaciones específicas del bloque actual
       if (bloqueActualModal) {
         participacionesPorBloque[bloqueActualModal] = [...participacionesModal];
         console.log('Participaciones guardadas para bloque', bloqueActualModal, ':', participacionesPorBloque[bloqueActualModal]);
       }
-      
+
       document.getElementById('modalParticipaciones').style.display = 'none';
     }
   });
 
 
 
-// Función para validar las participaciones en el modal
-function validarParticipacionesModal() {
-  const filas = document.querySelectorAll('#modalParticipaciones .tabla-participaciones tbody tr');
-  const sumas = {};
-  let error = '';
-  filas.forEach(fila => {
-    const rol = fila.querySelector('.rol-modal-participacion')?.value;
-    const porcentaje = parseFloat(fila.querySelector('.porcentaje-modal-participacion')?.value) || 0;
-    if (!rol) return;
-    if (!sumas[rol]) sumas[rol] = 0;
-    sumas[rol] += porcentaje;
-  });
-  for (const rol in sumas) {
-    if (sumas[rol] > 100.001) {
-      error = `La suma de participación para el rol "${rol}" supera el 100%. Corrija los valores.`;
-      break;
+  // Función para validar las participaciones en el modal
+  function validarParticipacionesModal() {
+    const filas = document.querySelectorAll('#modalParticipaciones .tabla-participaciones tbody tr');
+    const sumas = {};
+    let error = '';
+    filas.forEach(fila => {
+      const rol = fila.querySelector('.rol-modal-participacion')?.value;
+      const porcentaje = parseFloat(fila.querySelector('.porcentaje-modal-participacion')?.value) || 0;
+      if (!rol) return;
+      if (!sumas[rol]) sumas[rol] = 0;
+      sumas[rol] += porcentaje;
+    });
+    for (const rol in sumas) {
+      if (sumas[rol] > 100.001) {
+        error = `La suma de participación para el rol "${rol}" supera el 100%. Corrija los valores.`;
+        break;
+      }
     }
+    
+    // Mostrar resumen dinámico en tiempo real
+    const resumenModalDiv = document.getElementById('participacion-resumen-modal');
+    if (resumenModalDiv) {
+      resumenModalDiv.innerHTML = Object.keys(sumas).map(rol => {
+        const total = sumas[rol];
+        const esValido = total <= 100.001;
+        return `<span class="${esValido ? 'ok' : 'error'}">Total ${rol}: ${total.toFixed(2)}% ${esValido ? '✅' : '❌'}</span>`;
+      }).join(' ');
+    }
+    
+    const errorElement = document.getElementById('participaciones-modal-error');
+    if (errorElement) {
+      errorElement.textContent = error;
+    }
+    return !error;
   }
-  const errorElement = document.getElementById('participaciones-modal-error');
-  if (errorElement) {
-    errorElement.textContent = error;
-  }
-  return !error;
-}
 
-// Función para restaurar las participaciones en el modal
-function restaurarParticipacionesModal() {
-  const tbody = document.querySelector('#modalParticipaciones .tabla-participaciones tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  
-  console.log('Restaurando participaciones modal para bloque:', bloqueActualModal);
-  
-  let participacionesParaRestaurar = [];
-  
-  // Si hay un bloque específico, usar sus participaciones
-  if (bloqueActualModal && participacionesPorBloque[bloqueActualModal]) {
-    participacionesParaRestaurar = participacionesPorBloque[bloqueActualModal];
-    console.log('Participaciones encontradas para bloque', bloqueActualModal, ':', participacionesParaRestaurar);
-  } else {
-    console.log('No hay participaciones guardadas para el bloque', bloqueActualModal);
-  }
-  
-  console.log('Participaciones para restaurar:', participacionesParaRestaurar);
-  
-  if (participacionesParaRestaurar && Array.isArray(participacionesParaRestaurar)) {
-     participacionesParaRestaurar.forEach(part => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
+  // Función para restaurar las participaciones en el modal
+  function restaurarParticipacionesModal() {
+    const tbody = document.querySelector('#modalParticipaciones .tabla-participaciones tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    console.log('Restaurando participaciones modal para bloque:', bloqueActualModal);
+
+    let participacionesParaRestaurar = [];
+
+    // Si hay un bloque específico, usar sus participaciones
+    if (bloqueActualModal && participacionesPorBloque[bloqueActualModal]) {
+      participacionesParaRestaurar = participacionesPorBloque[bloqueActualModal];
+      console.log('Participaciones encontradas para bloque', bloqueActualModal, ':', participacionesParaRestaurar);
+    } else {
+      console.log('No hay participaciones guardadas para el bloque', bloqueActualModal);
+    }
+
+    console.log('Participaciones para restaurar:', participacionesParaRestaurar);
+
+    if (participacionesParaRestaurar && Array.isArray(participacionesParaRestaurar)) {
+      participacionesParaRestaurar.forEach(part => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
         <td>
           <select class="rol-modal-participacion">
             <option value="">Seleccione...</option>
@@ -3613,7 +3634,7 @@ function restaurarParticipacionesModal() {
         </td>
         <td>
           <select class="autor-modal-participacion" style="width:100%">
-            <option value="">Escriba el nombre del autor para buscar coincidencias...</option>
+            <option value="">Escribe el nombre del autor para buscar coincidencias...</option>
           </select>
         </td>
         <td>
@@ -3623,88 +3644,88 @@ function restaurarParticipacionesModal() {
           <button type="button" class="btn btn-danger btn-eliminar-participacion">Eliminar</button>
         </td>
       `;
-      tbody.appendChild(tr);
-      
-      // Inicializar opciones y valores
-      Promise.all([
-        fetch('assets/rol.json').then(r => r.json()),
-        fetch('assets/socios.json').then(r => r.json())
-      ]).then(([roles, autores]) => {
-        const rolSelect = tr.querySelector('.rol-modal-participacion');
-        rolSelect.innerHTML = '<option value="">Seleccione...</option>' + roles.map(r => `<option value="${r.Rol}">${r.Rol}</option>`).join('');
-        rolSelect.value = part.rol || '';
-        
-        const autorSelect = tr.querySelector('.autor-modal-participacion');
-        
-        // Inicializar Select2 para el campo de autor
-        if (autorSelect && window.$ && window.$.fn.select2) {
-          $(autorSelect).select2({
-            placeholder: 'Escriba el nombre del autor para buscar coincidencias...',
-            width: '100%',
-            allowClear: true,
-            tags: true,
-            minimumInputLength: 2,
-            ajax: {
-              transport: function(params, success, failure) {
-                fetchJSON('socios.json').then(sociosRaw => {
-                  const term = params.data.q ? params.data.q.toLowerCase() : '';
-                  const autores = sociosRaw
-                    .map(a => a["Nombre completo"])
-                    .filter(nombre => nombre && nombre.toLowerCase().includes(term));
-                  success({ results: autores.map(nombre => ({ id: nombre, text: nombre })) });
-                }).catch(failure);
-              },
-              processResults: function(data) {
-                return { results: data.results };
-              }
-            },
-            language: {
-              inputTooShort: function() {
-                return 'Escriba al menos 2 caracteres para buscar autores.';
-              },
-              noResults: function() {
-                return 'No se encontró el autor. Puede crear uno nuevo.';
-              }
-            }
-          });
-          
-          // Establecer el valor después de inicializar Select2
-          if (part.autor) {
-            // Crear una opción con el valor guardado si no existe
-            const option = new Option(part.autor, part.autor, true, true);
-            $(autorSelect).append(option).trigger('change');
-          }
-        }
-        
-        // Agregar eventos de validación
-        rolSelect.addEventListener('change', validarParticipacionesModal);
-        tr.querySelector('.porcentaje-modal-participacion').addEventListener('input', validarParticipacionesModal);
-      });
-      
-      tr.querySelector('.porcentaje-modal-participacion').value = part.porcentaje || '';
-    });
-  }
-}
+        tbody.appendChild(tr);
 
-// Función para agregar una fila al modal de participaciones
-function agregarFilaParticipacionModal() {
-  const tbody = document.querySelector('#modalParticipaciones .tabla-participaciones tbody');
-  if (!tbody) return;
-  
-  // Verificar si ya hay 10 participaciones
-  const filas = tbody.querySelectorAll('tr');
-  if (filas.length >= 10) {
-    alert('No se pueden agregar más de 10 participaciones.');
-    return;
+        // Inicializar opciones y valores
+        Promise.all([
+          fetch('assets/rol.json').then(r => r.json()),
+          fetch('assets/socios.json').then(r => r.json())
+        ]).then(([roles, autores]) => {
+          const rolSelect = tr.querySelector('.rol-modal-participacion');
+          rolSelect.innerHTML = '<option value="">Seleccione...</option>' + roles.map(r => `<option value="${r.Rol}">${r.Rol}</option>`).join('');
+          rolSelect.value = part.rol || '';
+
+          const autorSelect = tr.querySelector('.autor-modal-participacion');
+
+          // Inicializar Select2 para el campo de autor
+          if (autorSelect && window.$ && window.$.fn.select2) {
+            $(autorSelect).select2({
+              placeholder: 'Escribe el nombre del autor para buscar coincidencias...',
+              width: '100%',
+              allowClear: true,
+              tags: true,
+              minimumInputLength: 2,
+              ajax: {
+                transport: function (params, success, failure) {
+                  fetchJSON('socios.json').then(sociosRaw => {
+                    const term = params.data.q ? params.data.q.toLowerCase() : '';
+                    const autores = sociosRaw
+                      .map(a => a["Nombre completo"])
+                      .filter(nombre => nombre && nombre.toLowerCase().includes(term));
+                    success({ results: autores.map(nombre => ({ id: nombre, text: nombre })) });
+                  }).catch(failure);
+                },
+                processResults: function (data) {
+                  return { results: data.results };
+                }
+              },
+              language: {
+                inputTooShort: function () {
+                  return 'Escribe al menos 2 caracteres para buscar autores.';
+                },
+                noResults: function () {
+                  return 'No se encontró el autor. Puede crear uno nuevo.';
+                }
+              }
+            });
+
+            // Establecer el valor después de inicializar Select2
+            if (part.autor) {
+              // Crear una opción con el valor guardado si no existe
+              const option = new Option(part.autor, part.autor, true, true);
+              $(autorSelect).append(option).trigger('change');
+            }
+          }
+
+          // Agregar eventos de validación
+          rolSelect.addEventListener('change', validarParticipacionesModal);
+          tr.querySelector('.porcentaje-modal-participacion').addEventListener('input', validarParticipacionesModal);
+        });
+
+        tr.querySelector('.porcentaje-modal-participacion').value = part.porcentaje || '';
+      });
+    }
   }
-  
-  // Obtener roles y autores desde los JSON
-  Promise.all([
-    fetch('assets/rol.json').then(r => r.json()),
-    fetch('assets/socios.json').then(r => r.json())
-  ]).then(([roles, autores]) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
+
+  // Función para agregar una fila al modal de participaciones
+  function agregarFilaParticipacionModal() {
+    const tbody = document.querySelector('#modalParticipaciones .tabla-participaciones tbody');
+    if (!tbody) return;
+
+    // Verificar si ya hay 10 participaciones
+    const filas = tbody.querySelectorAll('tr');
+    if (filas.length >= 10) {
+      alert('No se pueden agregar más de 10 participaciones.');
+      return;
+    }
+
+    // Obtener roles y autores desde los JSON
+    Promise.all([
+      fetch('assets/rol.json').then(r => r.json()),
+      fetch('assets/socios.json').then(r => r.json())
+    ]).then(([roles, autores]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
       <td>
         <select class="rol-modal-participacion">
           <option value="">Seleccione...</option>
@@ -3713,7 +3734,7 @@ function agregarFilaParticipacionModal() {
       </td>
       <td>
         <select class="autor-modal-participacion" style="width:100%">
-  <option value="">Escriba el nombre del autor para buscar coincidencias...</option>
+  <option value="">Escribe el nombre del autor para buscar coincidencias...</option>
 </select>
       </td>
       <td>
@@ -3723,71 +3744,71 @@ function agregarFilaParticipacionModal() {
         <button type="button" class="btn btn-danger btn-eliminar-participacion">Eliminar</button>
       </td>
     `;
-    tbody.appendChild(tr);
-    // Inicializar Select2 con carga dinámica para el autor en el modal
-    const autorSelect = tr.querySelector('.autor-modal-participacion');
-    // Eventos para validar porcentaje y rol en el modal
-    tr.querySelector('.rol-modal-participacion').addEventListener('change', validarParticipacionesModal);
-    tr.querySelector('.porcentaje-modal-participacion').addEventListener('input', validarParticipacionesModal);
-    if (autorSelect && window.$ && window.$.fn.select2) {
-      $(autorSelect).select2({
-        placeholder: 'Escriba el nombre del autor para buscar coincidencias...',
-        width: '100%',
-        allowClear: true,
-        tags: true,
-        minimumInputLength: 2,
-        ajax: {
-          transport: function(params, success, failure) {
-            fetchJSON('socios.json').then(sociosRaw => {
-              const term = params.data.q ? params.data.q.toLowerCase() : '';
-              const autoresData = sociosRaw
-                .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
-                .map(socio => {
-                  // Verificar si tiene correo
-                  const tieneCorreo = socio["Correo electrónico"] && socio["Correo electrónico"].trim() !== '';
-                  const iconoCorreo = tieneCorreo ? '✓' : '✗';
-                  const textoCorreo = tieneCorreo ? socio["Correo electrónico"] : 'Sin correo';
-                  
-                  return { 
-                    id: socio["Nombre completo"], 
-                    text: socio["Nombre completo"],
-                    correo: socio["Correo electrónico"] || '',
-                    tieneCorreo: tieneCorreo,
-                    html: `<div class="autor-option ${tieneCorreo ? 'tiene-correo' : 'sin-correo'}">
+      tbody.appendChild(tr);
+      // Inicializar Select2 con carga dinámica para el autor en el modal
+      const autorSelect = tr.querySelector('.autor-modal-participacion');
+      // Eventos para validar porcentaje y rol en el modal
+      tr.querySelector('.rol-modal-participacion').addEventListener('change', validarParticipacionesModal);
+      tr.querySelector('.porcentaje-modal-participacion').addEventListener('input', validarParticipacionesModal);
+      if (autorSelect && window.$ && window.$.fn.select2) {
+        $(autorSelect).select2({
+          placeholder: 'Escribe el nombre del autor para buscar coincidencias...',
+          width: '100%',
+          allowClear: true,
+          tags: true,
+          minimumInputLength: 2,
+          ajax: {
+            transport: function (params, success, failure) {
+              fetchJSON('socios.json').then(sociosRaw => {
+                const term = params.data.q ? params.data.q.toLowerCase() : '';
+                const autoresData = sociosRaw
+                  .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
+                  .map(socio => {
+                    // Verificar si tiene correo
+                    const tieneCorreo = socio["Correo electrónico"] && socio["Correo electrónico"].trim() !== '';
+                    const iconoCorreo = tieneCorreo ? '✓' : '✗';
+                    const textoCorreo = tieneCorreo ? socio["Correo electrónico"] : 'Sin correo';
+
+                    return {
+                      id: socio["Nombre completo"],
+                      text: socio["Nombre completo"],
+                      correo: socio["Correo electrónico"] || '',
+                      tieneCorreo: tieneCorreo,
+                      html: `<div class="autor-option ${tieneCorreo ? 'tiene-correo' : 'sin-correo'}">
                             <span class="autor-nombre">${socio["Nombre completo"]}</span>
                             <span class="autor-correo-info">${iconoCorreo} ${textoCorreo}</span>
                           </div>`
-                  };
-                });
-              success({ results: autoresData });
-            }).catch(failure);
-          },
-          processResults: function(data) {
-            return { results: data.results };
-          },
-          templateResult: function(data) {
-            if (data.html) {
-              return $(data.html);
+                    };
+                  });
+                success({ results: autoresData });
+              }).catch(failure);
+            },
+            processResults: function (data) {
+              return { results: data.results };
+            },
+            templateResult: function (data) {
+              if (data.html) {
+                return $(data.html);
+              }
+              return data.text;
             }
-            return data.text;
-          }
-        },
-        language: {
-          inputTooShort: function() {
-            return 'Escriba al menos 2 caracteres para buscar autores.';
           },
-          noResults: function() {
-            return 'No se encontró el autor. Puede crear uno nuevo.';
+          language: {
+            inputTooShort: function () {
+              return 'Escribe al menos 2 caracteres para buscar autores.';
+            },
+            noResults: function () {
+              return 'No se encontró el autor. Puede crear uno nuevo.';
+            }
           }
-        }
-      });
-    }
-  });
-}
+        });
+      }
+    });
+  }
 
 
-// Evento para input file de importar títulos en el modal
-  document.body.addEventListener('change', function(e) {
+  // Evento para input file de importar títulos en el modal
+  document.body.addEventListener('change', function (e) {
     if (e.target.classList.contains('input-importar-titulos-episodio')) {
       console.log('Cambio detectado en input file');
       if (e.target.files && e.target.files[0]) {
@@ -3813,7 +3834,7 @@ async function importarTitulosEpisodioDesdeArchivo(file) {
   const mapaPaises = new Map(paises.map(p => [p["Nombre del país"].toLowerCase(), p["Nombre del país"]]));
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function (e) {
     let filas = [];
     if (file.name.endsWith('.csv')) {
       const text = e.target.result;
@@ -3842,7 +3863,7 @@ async function importarTitulosEpisodioDesdeArchivo(file) {
         }
 
         const [episodioStr, titulo, idioma, paisNombre] = fila;
-        
+
         // Validar el número de episodio
         const episodio = parseInt(episodioStr);
         if (isNaN(episodio) || episodio <= 0) {
@@ -3905,7 +3926,7 @@ async function mostrarModalPegarTitulosEpisodio() {
   console.log('Abriendo modal para pegar títulos');
   const modal = document.getElementById('modalPegarTitulosEpisodio');
   const textarea = document.getElementById('textareaPegarTitulos');
-  
+
   // Verificar si hay un intervalo de episodios definido
   if (!window.episodiosDisponibles || window.episodiosDisponibles.length === 0) {
     alert('Por favor, defina primero el intervalo de episodios antes de pegar títulos.');
@@ -3916,31 +3937,31 @@ async function mostrarModalPegarTitulosEpisodio() {
   const paises = await fetchJSON('paises.json');
   const mapaPaises = new Map(paises.map(p => [p["Nombre del país"]?.toLowerCase(), p["Nombre del país"]]));
   console.log('Mapa de países cargado:', mapaPaises);
-  
+
   if (modal && textarea) {
     modal.style.display = 'flex';
     textarea.value = '';
-    
+
     // Actualizar el texto de instrucciones
     const instruccionesParrafo = modal.querySelector('p small');
     if (instruccionesParrafo) {
       instruccionesParrafo.textContent = 'Episodio,Otro título,Idioma,País';
     }
-    
+
     // Actualizar el placeholder del textarea
     textarea.placeholder = '1,Título alternativo,Español,Chile\n2,Alternative title,Inglés,Estados Unidos';
-    
+
     // Asignar eventos a los botones
     const btnAceptar = modal.querySelector('.btn-aceptar-pegar');
     const btnCancelar = modal.querySelector('.btn-cancelar-pegar');
-    
+
     if (btnAceptar) {
-      btnAceptar.onclick = function() {
+      btnAceptar.onclick = function () {
         const texto = textarea.value;
         console.log('Texto pegado:', texto);
         const lineas = texto.split(/\r?\n/).map(line => line.trim()).filter(line => line);
         console.log('Líneas procesadas:', lineas);
-        
+
         if (lineas.length) {
           const nuevosTitulos = [];
           let titulosInvalidos = [];
@@ -3951,7 +3972,7 @@ async function mostrarModalPegarTitulosEpisodio() {
             const campos = linea.split(',').map(item => item?.trim());
             console.log('Campos separados:', campos);
             const [episodioStr, titulo, idioma, paisNombre] = campos;
-            
+
             // Validar el número de episodio
             const episodio = parseInt(episodioStr);
             if (isNaN(episodio) || episodio <= 0) {
@@ -3968,7 +3989,7 @@ async function mostrarModalPegarTitulosEpisodio() {
             // Buscar el código del país
             const codigoPais = paisNombre ? mapaPaises.get(paisNombre.toLowerCase()) : '';
             console.log('País nombre:', paisNombre, 'Código encontrado:', codigoPais);
-            
+
             const nuevoTitulo = {
               episodio: episodio.toString(),
               titulo: titulo || '',
@@ -4006,9 +4027,9 @@ async function mostrarModalPegarTitulosEpisodio() {
         modal.style.display = 'none';
       };
     }
-    
+
     if (btnCancelar) {
-      btnCancelar.onclick = function() {
+      btnCancelar.onclick = function () {
         modal.style.display = 'none';
       };
     }
@@ -4019,7 +4040,7 @@ async function mostrarModalPegarTitulosEpisodio() {
 
 // Inicialización
 // Función de prueba manual para depuración
-window.testSaveEpisodiosData = function() {
+window.testSaveEpisodiosData = function () {
   console.log('=== PRUEBA MANUAL saveEpisodiosData ===');
   saveEpisodiosData();
 };
@@ -4029,23 +4050,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   console.log('currentStep inicial:', currentStep);
   console.log('formData inicial:', window.formData);
   console.log('Inicializando formulario...');
-  
+
   // Configurar validación en tiempo real
   setupRealTimeValidation();
-  
+
   // Configurar formateo automático del RUT
   setupRutFormatting();
-  
+
   // Inicializar el carrusel de progreso
   inicializarCarruselProgreso();
-  
+
   // Asegurarse de que todos los pasos estén ocultos al inicio
   document.querySelectorAll('.wizard-step').forEach(step => {
     step.style.display = 'none';
   });
-  
+
   renderProgress();
-  
+
   // Renderizar el primer paso
   const firstStepElement = document.getElementById('step-1');
   if (firstStepElement) {
@@ -4058,10 +4079,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   ['actores', 'directores', 'guionistas'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.addEventListener('change', function(e) {
+      el.addEventListener('change', function (e) {
         e.target.value = normalizarNombres(e.target.value);
       });
-      el.addEventListener('blur', function(e) {
+      el.addEventListener('blur', function (e) {
         e.target.value = normalizarNombres(e.target.value);
       });
     }
@@ -4072,7 +4093,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('next-btn').addEventListener('click', async () => {
     console.log('Botón siguiente presionado. Paso actual:', currentStep, 'Título del paso:', steps[currentStep]?.title);
-    
+
     if (currentStep === 0 && !validateStep1()) {
       console.log('Validación falló en paso 1');
       return;
@@ -4085,26 +4106,26 @@ window.addEventListener('DOMContentLoaded', async () => {
       console.log('Validación falló en datos técnicos (paso 3)');
       return;
     }
-    
+
     // Para el paso de participaciones, verificar si es obra serializada
     if (currentStep === 3) {
       const formatoField = document.getElementById('formato');
       const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
       const obrasSerializadas = ['Serie', 'Telenovela'];
       const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
-      
+
       console.log('Formato seleccionado:', formatoSeleccionado, 'Es serializada:', esSerializada);
-      
+
       if (!esSerializada && !validarParticipaciones()) {
         console.log('Validación falló en participaciones (paso 4)');
         return;
       }
-      
+
       if (esSerializada) {
         console.log('Obra serializada - omitiendo validación de participaciones');
       }
     }
-    
+
     if (currentStep === 4 && !validateStepEpisodios()) {
       console.log('Validación falló en episodios (paso 5)');
       return;
@@ -4113,7 +4134,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       console.log('Validación falló en firma (paso 6)');
       return;
     }
-    
+
     if (currentStep < steps.length - 1) {
       if (currentStep === 0) saveStep1Data();
       console.log('Avanzando al siguiente paso:', currentStep + 1);
@@ -4122,7 +4143,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
   // Eliminada la función duplicada saveEpisodiosData con selectores incorrectos y lógica conflictiva.
 
-document.getElementById('wizard-form').addEventListener('submit', function(e) {
+  document.getElementById('wizard-form').addEventListener('submit', function (e) {
     e.preventDefault();
     submitForm(e);
   });
@@ -4130,7 +4151,7 @@ document.getElementById('wizard-form').addEventListener('submit', function(e) {
   // Lógica para botón Cancelar y modal
   const btnCancelar = document.getElementById('cancel-btn');
   if (btnCancelar) {
-    btnCancelar.addEventListener('click', function(e) {
+    btnCancelar.addEventListener('click', function (e) {
       e.preventDefault();
       const modal = document.getElementById('modalCancelar');
       if (modal) modal.style.display = 'block';
@@ -4140,10 +4161,10 @@ document.getElementById('wizard-form').addEventListener('submit', function(e) {
   const modalCancelarSi = document.getElementById('modalCancelarSi');
   const modalCancelarNo = document.getElementById('modalCancelarNo');
   if (modalCancelar && modalCancelarSi && modalCancelarNo) {
-    modalCancelarNo.onclick = function() {
+    modalCancelarNo.onclick = function () {
       modalCancelar.style.display = 'none';
     };
-    modalCancelarSi.onclick = function() {
+    modalCancelarSi.onclick = function () {
       modalCancelar.style.display = 'none';
       const overlay = document.getElementById('loadingOverlay');
       if (overlay) overlay.style.display = 'flex';
@@ -4160,7 +4181,7 @@ async function importarTitulosDesdeArchivo(file, bloqueId) {
   // Verificar si hay un intervalo de episodios definido
   const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
   if (!bloque) return;
-  
+
   const episodios = Array.from(bloque.querySelectorAll('.episodio-item')).map(item => item.getAttribute('data-episodio'));
   if (!episodios || episodios.length === 0) {
     alert('Por favor, defina primero el intervalo de episodios antes de importar títulos.');
@@ -4168,7 +4189,7 @@ async function importarTitulosDesdeArchivo(file, bloqueId) {
   }
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function (e) {
     let filas = [];
     if (file.name.endsWith('.csv')) {
       const text = e.target.result;
@@ -4259,13 +4280,13 @@ function mostrarModalPegarTitulos(bloqueId) {
   }
   modal.style.display = 'block';
   document.getElementById(textareaId).value = '';
-  document.getElementById(btnAceptarId).onclick = function() {
+  document.getElementById(btnAceptarId).onclick = function () {
     const texto = document.getElementById(textareaId).value;
     const titulos = texto.split(/\r?\n/).map(line => line.trim()).filter(line => line);
     asignarTitulosAEpisodios(titulos, bloqueId);
     modal.style.display = 'none';
   };
-  document.getElementById(btnCancelarId).onclick = function() {
+  document.getElementById(btnCancelarId).onclick = function () {
     modal.style.display = 'none';
   };
 }
@@ -4296,7 +4317,7 @@ function setupSignatureFileUpload() {
   const previewImage = document.getElementById('firma-image');
   const fileName = document.getElementById('firma-filename');
   const fileSize = document.getElementById('firma-filesize');
-  
+
   if (fileInput) {
     fileInput.addEventListener('change', handleSignatureFileSelect);
   }
@@ -4308,7 +4329,7 @@ function handleSignatureFileSelect(event) {
   const previewImage = document.getElementById('firma-image');
   const fileName = document.getElementById('firma-filename');
   const fileSize = document.getElementById('firma-filesize');
-  
+
   if (file) {
     // Validar tipo de archivo
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -4317,7 +4338,7 @@ function handleSignatureFileSelect(event) {
       event.target.value = '';
       return;
     }
-    
+
     // Validar tamaño (máximo 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
@@ -4325,16 +4346,16 @@ function handleSignatureFileSelect(event) {
       event.target.value = '';
       return;
     }
-    
+
     // Mostrar vista previa y convertir a base64
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
       const base64Data = e.target.result;
       previewImage.src = base64Data;
       fileName.textContent = file.name;
       fileSize.textContent = formatFileSize(file.size);
       preview.style.display = 'block';
-      
+
       // Guardar en formData como base64 para Power Automate
       if (!formData.firma) {
         formData.firma = {};
@@ -4345,7 +4366,7 @@ function handleSignatureFileSelect(event) {
       formData.firma.name = file.name;
       formData.firma.size = file.size;
       formData.firma.type = file.type;
-      
+
       console.log('Firma guardada como base64:', {
         name: file.name,
         size: file.size,
@@ -4361,17 +4382,17 @@ function removeSignatureFile() {
   const fileInput = document.getElementById('firma-file');
   const preview = document.getElementById('firma-preview');
   const previewImage = document.getElementById('firma-image');
-  
+
   // Limpiar input y preview
   fileInput.value = '';
   previewImage.src = '';
   preview.style.display = 'none';
-  
+
   // Limpiar formData
   if (formData.firma) {
     delete formData.firma;
   }
-  
+
   console.log('Firma eliminada del formData');
 }
 
@@ -4385,16 +4406,16 @@ function formatFileSize(bytes) {
 
 function validateStepFirma() {
   let isValid = true;
-  
+
   // Validar nombre completo
   const nombreInput = document.getElementById('declarante-nombre');
   if (!nombreInput.value.trim()) {
-    showError(nombreInput.parentElement, 'Por favor, ingrese su nombre completo.');
+    showError(nombreInput.parentElement, 'Por favor, ingresa tu nombre completo.');
     isValid = false;
   } else {
     clearError(nombreInput.parentElement);
   }
-  
+
   // Validar RUT
   const rutInput = document.getElementById('declarante-rut');
   if (!rutInput.value.trim()) {
@@ -4406,7 +4427,7 @@ function validateStepFirma() {
   } else {
     clearError(rutInput.parentElement);
   }
-  
+
   // Validar correo electrónico
   const correoInput = document.getElementById('declarante-correo');
   if (!correoInput.value.trim()) {
@@ -4418,16 +4439,16 @@ function validateStepFirma() {
   } else {
     clearError(correoInput.parentElement);
   }
-  
+
   // Validar firma
   const fileInput = document.getElementById('firma-file');
   if (!fileInput.files || fileInput.files.length === 0) {
-    showError(fileInput.parentElement, 'Por favor, adjunte su firma digital.');
+    showError(fileInput.parentElement, 'Por favor, adjunta tu firma digital.');
     isValid = false;
   } else {
     clearError(fileInput.parentElement);
   }
-  
+
   // Validar checkbox de declaración de veracidad
   const declaracionCheckbox = document.getElementById('declaracion-veracidad');
   if (!declaracionCheckbox.checked) {
@@ -4436,7 +4457,7 @@ function validateStepFirma() {
   } else {
     clearError(declaracionCheckbox.parentElement.parentElement);
   }
-  
+
   return isValid;
 }
 
@@ -4444,28 +4465,28 @@ function validateStepFirma() {
 function validarRutChileno(rut) {
   // Limpiar el RUT de puntos y guiones
   const rutLimpio = rut.replace(/[^0-9kK]/g, '');
-  
+
   // Verificar longitud mínima
   if (rutLimpio.length < 2) {
     return false;
   }
-  
+
   // Separar número y dígito verificador
   const numero = rutLimpio.slice(0, -1);
   const dv = rutLimpio.slice(-1).toLowerCase();
-  
+
   // Calcular dígito verificador
   let suma = 0;
   let multiplicador = 2;
-  
+
   for (let i = numero.length - 1; i >= 0; i--) {
     suma += parseInt(numero[i]) * multiplicador;
     multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
   }
-  
+
   const resto = suma % 11;
   const dvCalculado = resto === 0 ? '0' : resto === 1 ? 'k' : (11 - resto).toString();
-  
+
   return dv === dvCalculado;
 }
 
@@ -4480,15 +4501,15 @@ function validarCorreo(correo) {
 function formatearRut(rut) {
   // Limpiar el RUT
   const rutLimpio = rut.replace(/[^0-9kK]/g, '');
-  
+
   if (rutLimpio.length <= 1) {
     return rutLimpio;
   }
-  
+
   // Separar número y dígito verificador
   const numero = rutLimpio.slice(0, -1);
   const dv = rutLimpio.slice(-1);
-  
+
   // Formatear con puntos
   let numeroFormateado = '';
   for (let i = 0; i < numero.length; i++) {
@@ -4497,7 +4518,7 @@ function formatearRut(rut) {
     }
     numeroFormateado += numero[i];
   }
-  
+
   return numeroFormateado + '-' + dv;
 }
 
@@ -4505,19 +4526,19 @@ function formatearRut(rut) {
 function setupRutFormatting() {
   const rutInput = document.getElementById('declarante-rut');
   if (rutInput) {
-    rutInput.addEventListener('input', function(e) {
+    rutInput.addEventListener('input', function (e) {
       const cursorPosition = e.target.selectionStart;
       const oldValue = e.target.value;
       const newValue = formatearRut(oldValue);
-      
+
       e.target.value = newValue;
-      
+
       // Ajustar posición del cursor
       const diff = newValue.length - oldValue.length;
       e.target.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
     });
-    
-    rutInput.addEventListener('blur', function(e) {
+
+    rutInput.addEventListener('blur', function (e) {
       if (e.target.value && !validarRutChileno(e.target.value)) {
         showError(e.target.parentElement, 'RUT inválido. Verifique el formato y dígito verificador.');
       } else {
@@ -4529,3 +4550,4 @@ function setupRutFormatting() {
 
 // Hacer la función disponible globalmente para el onclick en HTML
 window.removeSignatureFile = removeSignatureFile;
+
