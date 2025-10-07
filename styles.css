@@ -1091,6 +1091,54 @@ main {
   font-weight: 500;
 }
 
+/* Estilos para la nueva estructura de información de firma */
+.firma-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.firma-info-item {
+  background-color: #e8f4fd;
+  border: 1px solid #bee5eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  color: #0c5460;
+}
+
+.firma-info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.firma-info-header i {
+  color: #17a2b8;
+  font-size: 1.2rem;
+}
+
+.firma-info-header strong {
+  color: #0c5460;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.firma-info-item p {
+  margin: 0;
+  line-height: 1.6;
+  color: #0c5460;
+}
+
+/* Responsive para la grilla de información de firma */
+@media (min-width: 768px) {
+  .firma-info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
 .info-box {
   display: flex;
   align-items: flex-start;
@@ -3704,3 +3752,4 @@ main {
 .episodios-individuales::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
