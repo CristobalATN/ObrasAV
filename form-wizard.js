@@ -22,8 +22,20 @@ let generosData = [];
 // Variables globales para bloques de episodios
 let contadorBloquesEpisodios = 0;
 
+// Formatos serializados (para ocultar/mostrar pasos dinámicamente)
+const FORMATOS_SERIALIZADOS = ['Serie', 'Telenovela', 'Miniserie', 'Serie documental'];
+
 function saveEpisodiosData() {
   console.log('=== INICIO saveEpisodiosData ===');
+
+  // *** VERIFICAR SI SE SELECCIONÓ "SÍ" (PARTICIPACIONES INLINE) ***
+  // Si es así, NO procesar bloques porque los datos ya están guardados en formato correcto
+  const radioSi = document.getElementById('radio-participaciones-si');
+  if (radioSi && radioSi.checked) {
+    console.log('Caso "Sí" detectado - Los datos inline ya están guardados, omitiendo procesamiento de bloques');
+    return; // Salir de la función sin procesar bloques
+  }
+
   // Solo buscar bloques colapsables para evitar duplicados
   const bloques = document.querySelectorAll('.bloque-episodios-colapsable');
   console.log('Bloques encontrados:', bloques.length);
@@ -45,7 +57,7 @@ function saveEpisodiosData() {
     console.log(`Bloque ${bloqueIndex} - Participaciones desde participacionesPorBloque:`, participacionesBloque);
 
     // Recopilar episodios del bloque
-    const episodios = bloque.querySelectorAll('.episodio-item');
+    const episodios = bloque.querySelectorAll('.episodio-item-simple, .episodio-item');
     console.log(`Episodios en bloque ${bloqueIndex}:`, episodios.length);
     let episodiosDelBloque = [];
 
@@ -53,7 +65,7 @@ function saveEpisodiosData() {
       console.log(`Procesando episodio ${epiIndex}:`, epi);
       const episodioObj = {
         numero: epi.getAttribute('data-episodio'),
-        titulo: epi.querySelector('.titulo-episodio')?.value || '',
+        titulo: (epi.querySelector('.titulo-episodio-inline')?.value || epi.querySelector('.titulo-episodio')?.value || ''),
         participaciones: [...participacionesBloque]
       };
       console.log(`Episodio ${epiIndex} objeto final:`, episodioObj);
@@ -129,8 +141,8 @@ function saveEpisodiosData() {
     const filasGenerales = document.querySelectorAll('.tabla-participaciones-modal tbody tr');
     console.log('Filas de participaciones generales encontradas:', filasGenerales.length);
 
-    // Obtener la lista de socios para buscar correos
-    fetchJSON('socios.json').then(socios => {
+    // Obtener la lista de socios para buscar correos (con encriptación)
+    AppSecurity.loadData().then(socios => {
       filasGenerales.forEach((tr, index) => {
         const rol = tr.querySelector('.rol-participacion')?.value || '';
         const autor = tr.querySelector('.autor-participacion')?.value || '';
@@ -214,8 +226,12 @@ function saveEpisodiosData() {
     console.log('stepEpisodios para obra no serializada:', window.formData.stepEpisodios);
   } else {
     console.log('Obra serializada - Guardando episodios normalmente');
-    // Obtener la lista de socios para buscar correos
-    fetchJSON('socios.json').then(socios => {
+    // Asegurar que participaciones sea siempre un arreglo aunque esté vacío
+    if (!Array.isArray(window.formData.participaciones)) {
+      window.formData.participaciones = [];
+    }
+    // Obtener la lista de socios para buscar correos (con encriptación)
+    AppSecurity.loadData().then(socios => {
       // Añadir correos a las participaciones de cada episodio
       episodiosParaEsquema.forEach(episodio => {
         if (episodio.participaciones && episodio.participaciones.length > 0) {
@@ -325,6 +341,66 @@ function actualizarSeccionNotificacion() {
   `;
 }
 
+// ========================================
+// FUNCIÓN PARA OCULTAR/MOSTRAR PASOS DINÁMICAMENTE
+// ========================================
+function toggleStepVisibility(formato) {
+  console.log('toggleStepVisibility llamada con formato:', formato);
+
+  const esSerializada = FORMATOS_SERIALIZADOS.includes(formato);
+
+  // Índices de los pasos (0-indexed)
+  const STEP_PARTICIPACIONES = 3; // Paso 4
+  const STEP_EPISODIOS = 4;       // Paso 5
+
+  // Elementos del DOM
+  const stepParticipacionesSection = document.getElementById('step-4');
+  const stepEpisodiosSection = document.getElementById('step-5');
+  const progressSlideParticipaciones = document.querySelector('.progress-slide[data-step="4"]');
+  const progressSlideEpisodios = document.querySelector('.progress-slide[data-step="5"]');
+
+  if (esSerializada) {
+    // OCULTAR PASO PARTICIPACIONES (Paso 4)
+    console.log('Formato serializado detectado - Ocultando paso Participaciones');
+
+    if (stepParticipacionesSection) {
+      stepParticipacionesSection.classList.add('step-hidden');
+    }
+    if (progressSlideParticipaciones) {
+      progressSlideParticipaciones.classList.add('step-hidden');
+    }
+
+    // MOSTRAR PASO EPISODIOS (Paso 5)
+    if (stepEpisodiosSection) {
+      stepEpisodiosSection.classList.remove('step-hidden');
+    }
+    if (progressSlideEpisodios) {
+      progressSlideEpisodios.classList.remove('step-hidden');
+    }
+  } else {
+    // MOSTRAR PASO PARTICIPACIONES (Paso 4)
+    console.log('Formato NO serializado detectado - Mostrando paso Participaciones');
+
+    if (stepParticipacionesSection) {
+      stepParticipacionesSection.classList.remove('step-hidden');
+    }
+    if (progressSlideParticipaciones) {
+      progressSlideParticipaciones.classList.remove('step-hidden');
+    }
+
+    // OCULTAR PASO EPISODIOS (Paso 5)
+    if (stepEpisodiosSection) {
+      stepEpisodiosSection.classList.add('step-hidden');
+    }
+    if (progressSlideEpisodios) {
+      progressSlideEpisodios.classList.add('step-hidden');
+    }
+  }
+
+  // Actualizar el carrusel de progreso para reflejar los cambios
+  actualizarBarraProgreso(currentStep + 1);
+}
+
 // Inicializar el carrusel de progreso
 function inicializarCarruselProgreso() {
   const track = document.querySelector('.progress-track');
@@ -393,6 +469,27 @@ function actualizarBarraProgreso(pasoActual) {
   const slides = document.querySelectorAll('.progress-slide');
   if (!slides.length) return;
 
+  // Renumerar los pasos visibles para que sean consecutivos
+  let numeroVisible = 1;
+  slides.forEach((slide, index) => {
+    const stepElement = slide.querySelector('.progress-step');
+
+    // Cada slide corresponde a un paso (index 0 = step-1, index 1 = step-2, etc.)
+    const stepId = `step-${index + 1}`;
+    const stepDiv = document.getElementById(stepId);
+    const isHidden = stepDiv && stepDiv.classList.contains('step-hidden');
+
+    if (!isHidden && stepElement) {
+      // Paso visible: actualizar número y asegurar que sea visible
+      stepElement.textContent = numeroVisible;
+      stepElement.style.display = '';
+      numeroVisible++;
+    } else if (isHidden && stepElement) {
+      // Paso oculto: ocultar el número
+      stepElement.style.display = 'none';
+    }
+  });
+
   const slidesToShow = 3;
   const totalSlides = slides.length;
   const maxIndex = Math.max(0, totalSlides - slidesToShow);
@@ -457,10 +554,12 @@ function renderProgress() {
 // Renderizar la sección de exhibición internacional
 async function renderStep2(container) {
   container.innerHTML = `
+    <h2 style="color: #097137; margin-bottom: 1rem; font-size: 1.8rem;">Títulos Extranjeros</h2>
+    
     <div class="note-box">
       <div class="note-icon">ℹ️</div>
       <div class="note-content">
-        <strong>Nota:</strong> Completa esta sección solo si la obra ha tenido exhibición internacional. No es obligatorio completar este apartado.
+        <strong>Importante:</strong> En esta sección podrás informar los títulos extranjeros/traducidos que posee la obra, además podrás indicar los países y/o plataformas específicas en las que se ha emitido para que podamos gestionar el pago de aquellos derechos, si corresponde. Completar esta sección es totalmente opcional.
       </div>
     </div>
     
@@ -468,7 +567,7 @@ async function renderStep2(container) {
       <table class="tabla-exhibiciones">
         <thead>
           <tr>
-            <th>Otro título</th>
+            <th>Título extranjero/traducido</th>
             <th>Idioma</th>
             <th>País de exhibición</th>
             <th>Canal / Plataforma / Sala</th>
@@ -483,7 +582,7 @@ async function renderStep2(container) {
     
     <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
       <button type="button" class="btn btn-outline-success btn-agregar-exhibicion">
-        <i class="fas fa-plus"></i> Agregar exhibición
+        <i class="fas fa-plus"></i> Agregar otro título extranjero
       </button>
     </div>
   `;
@@ -519,7 +618,7 @@ async function agregarFilaExhibicion() {
       <input type="text" 
              class="form-control" 
              name="exhibiciones[${exhibicionId}][otro_titulo]" 
-             placeholder="Título con el que se exhibió">
+             placeholder="Título extranjero/traducido">
     </td>
     <td>
       <select class="form-control idioma-select" 
@@ -554,16 +653,38 @@ async function agregarFilaExhibicion() {
 
   // Inicializar Select2 para los nuevos selects
   if (window.$ && window.$.fn.select2) {
-    $(fila.querySelector('.idioma-select')).select2({
+    const idiomaSelect = $(fila.querySelector('.idioma-select'));
+    const paisSelect = $(fila.querySelector('.pais-select'));
+
+    idiomaSelect.select2({
       placeholder: 'Selecciona...',
       width: '100%',
       allowClear: true
     });
 
-    $(fila.querySelector('.pais-select')).select2({
+    paisSelect.select2({
       placeholder: 'Selecciona...',
       width: '100%',
       allowClear: true
+    });
+
+    // Agregar enfoque automático al campo de búsqueda
+    idiomaSelect.on('select2:open', function () {
+      setTimeout(function () {
+        const searchField = document.querySelector('.select2-container--open .select2-search__field');
+        if (searchField) {
+          searchField.focus();
+        }
+      }, 100);
+    });
+
+    paisSelect.on('select2:open', function () {
+      setTimeout(function () {
+        const searchField = document.querySelector('.select2-container--open .select2-search__field');
+        if (searchField) {
+          searchField.focus();
+        }
+      }, 100);
     });
   }
 
@@ -771,25 +892,30 @@ async function renderStep1(container) {
   }
 
   container.innerHTML = `
+    <h2 style="color: #097137; margin-bottom: 1rem; font-size: 1.8rem;">Datos Generales de la Obra</h2>
+    <p style="color: #666; margin-bottom: 2rem; font-size: 1rem; line-height: 1.5;">
+      Completar la siguiente información nos ayuda a una mejor identificación de la obra pero no tiene relación con la declaración de participaciones.
+    </p>
+    
     <div class="form-group">
-      <label for="titulo">Título original <span style="color:${COLOR_VERDE}">*</span></label>
+      <label for="titulo">Título original <span style="color: #dc3545;">*</span></label>
       <input type="text" id="titulo" name="titulo" placeholder="Ej: El laberinto del fauno" required>
     </div>
     <div class="form-group">
-      <label for="formato">Tipo de formato <span style="color:${COLOR_VERDE}">*</span></label>
+      <label for="formato">Tipo de formato <span style="color: #dc3545;">*</span></label>
       <select id="formato" name="formato" required>
         <option value="">Selecciona…</option>
         ${formatos.filter(f => f.formato).map(f => `<option value="${f.formato}">${f.formato}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
-      <label for="genero">Género <span style="color:${COLOR_VERDE}">*</span></label>
+      <label for="genero">Género <span style="color: #dc3545;">*</span></label>
       <select id="genero" name="genero" required disabled>
         <option value="">Selecciona antes el formato para mostrar las opciones</option>
       </select>
     </div>
     <div class="form-group">
-      <label for="productora">Empresa productora <span style="color:${COLOR_VERDE}">*</span></label>
+      <label for="productora">Empresa productora <span style="color: #dc3545;">*</span></label>
       <select id="productora" name="productora" multiple required>
         ${productoras.map(p => `<option value="${p.Productora}">${p.Productora}</option>`).join('')}
       </select>
@@ -803,31 +929,31 @@ async function renderStep1(container) {
       <div class="input-hint">Puedes seleccionar varios países.</div>
     </div>
     <div class="form-group">
-      <label for="anio">Año de producción <span style="color:${COLOR_VERDE}">*</span></label>
+      <label for="anio">Año de producción <span style="color: #dc3545;">*</span></label>
       <select id="anio" name="anio" required>
-        <option value="">Selecciona o escribe el nombre</option>
+        <option value="">Selecciona o escribe el año</option>
         ${Array.from({ length: new Date().getFullYear() - 1899 }, (_, i) => new Date().getFullYear() - i).map(year => `<option value="${year}">${year}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
       <label for="idioma">Idioma</label>
-      <select id="idioma" name="idioma">
-        <option value="">Selecciona</option>
+      <select id="idioma" name="idioma" multiple>
         ${idiomas.filter(i => i.Idioma).map(i => `<option value="${i.Idioma}">${i.Idioma}</option>`).join('')}
       </select>
+      <div class="input-hint">Puedes seleccionar varios idiomas.</div>
     </div>
     <div class="form-group">
       <label for="actores">Actores</label>
-      <input type="text" id="actores" name="actores" placeholder="Ej: Juan Pérez, María García">
+      <input type="text" id="actores" name="actores" placeholder="Ej: Ana Silva, Carlos Rojas">
       <div class="input-hint">Separa los nombres con coma y espacio.</div>
     </div>
     <div class="form-group">
       <label for="directores">Directores</label>
-      <input type="text" id="directores" name="directores" placeholder="Ej: Pedro Almodóvar, Alejandro Amenábar">
+      <input type="text" id="directores" name="directores" placeholder="Ej: Laura Martínez, Diego Fernández">
     </div>
     <div class="form-group">
       <label for="guionistas">Guionistas</label>
-      <input type="text" id="guionistas" name="guionistas" placeholder="Ej: Guillermo del Toro, Pedro Peirano">
+      <input type="text" id="guionistas" name="guionistas" placeholder="Ej: Sofía Torres, Andrés Morales">
     </div>
   `;
 
@@ -839,14 +965,33 @@ async function renderStep1(container) {
       let placeholder = (id === 'paises' || id === 'productora')
         ? 'Selecciona o escribe el nombre'
         : (id === 'anio')
-          ? 'Selecciona o escribe el nombre'
+          ? 'Selecciona o escribe el año'
           : $(this).find('option:first').text();
-      $(this).select2({
+
+      // Configuración base de Select2
+      const select2Config = {
         placeholder: placeholder,
         width: '100%',
         allowClear: true,
         tags: id === 'productora' || id === 'paises' || id === 'anio',
         multiple: isMultiple
+      };
+
+      // Agregar selectOnClose a todos los selects con tags para permitir escritura directa
+      if (select2Config.tags) {
+        select2Config.selectOnClose = true;
+      }
+
+      $(this).select2(select2Config);
+
+      // Agregar enfoque automático al campo de búsqueda cuando se abre el Select2
+      $(this).on('select2:open', function () {
+        setTimeout(function () {
+          const searchField = document.querySelector('.select2-container--open .select2-search__field');
+          if (searchField) {
+            searchField.focus();
+          }
+        }, 100);
       });
     });
   }
@@ -873,6 +1018,9 @@ async function renderStep1(container) {
         width: '100%'
       });
     }
+
+    // *** OCULTAR/MOSTRAR PASOS SEGÚN FORMATO ***
+    toggleStepVisibility(formatoSel);
   });
 }
 
@@ -1024,7 +1172,7 @@ function saveParticipacionesModal() {
 }
 
 // Función para guardar los datos del paso actual
-function saveCurrentStepData() {
+async function saveCurrentStepData() {
   if (currentStep === 0) {
     saveStep1Data();
   } else if (currentStep === 1) {
@@ -1035,9 +1183,18 @@ function saveCurrentStepData() {
   } else if (currentStep === 3) {
     saveParticipacionesData();
   } else if (currentStep === 4) {
-    saveEpisodiosData();
-    // También guardar participaciones del modal si está abierto o tiene datos
-    saveParticipacionesModal();
+    // Verificar si se seleccionó "Sí" (participaciones inline) o "No" (bloques)
+    const radioSi = document.getElementById('radio-participaciones-si');
+    if (radioSi && radioSi.checked) {
+      // Caso "Sí": guardar datos inline
+      await saveParticipacionesInlineData();
+    } else {
+      // Caso "No": guardar datos de bloques
+      formData.mismasParticipaciones = 'no';
+      saveEpisodiosData();
+      // También guardar participaciones del modal si está abierto o tiene datos
+      saveParticipacionesModal();
+    }
   } else if (currentStep === 5) {
     saveStepFirmaData();
   }
@@ -1048,6 +1205,11 @@ function saveCurrentStepData() {
 function restoreStepData(stepIndex, container) {
   if (stepIndex === 0 && formData.step1) {
     restoreStep1Data(container);
+
+    // *** APLICAR VISIBILIDAD DE PASOS AL RESTAURAR DATOS ***
+    if (formData.formato) {
+      toggleStepVisibility(formData.formato);
+    }
   } else if (stepIndex === 1 && formData.step2) {
     restoreStep2Data(container);
   } else if (stepIndex === 2 && formData.step1) {
@@ -1080,11 +1242,30 @@ async function showStep(idx) {
     return;
   }
 
+  // Verificar si el paso está oculto y saltar al siguiente/anterior
+  const nextStepId = `step-${idx + 1}`;
+  const nextStepElement = document.getElementById(nextStepId);
+
+  if (nextStepElement && nextStepElement.classList.contains('step-hidden')) {
+    console.log(`Paso ${idx + 1} está oculto, saltando...`);
+
+    // Determinar dirección de navegación
+    const isMovingForward = idx > currentStep;
+
+    if (isMovingForward && idx < steps.length - 1) {
+      // Saltar al siguiente paso
+      await showStep(idx + 1);
+      return;
+    } else if (!isMovingForward && idx > 0) {
+      // Saltar al paso anterior
+      await showStep(idx - 1);
+      return;
+    }
+  }
+
   // Obtener el elemento del paso actual y el siguiente
   const currentStepId = `step-${currentStep + 1}`;
-  const nextStepId = `step-${idx + 1}`;
   const currentStepElement = document.getElementById(currentStepId);
-  const nextStepElement = document.getElementById(nextStepId);
 
   if (!nextStepElement) {
     console.error('No se encontró el elemento del paso:', nextStepId);
@@ -1093,7 +1274,7 @@ async function showStep(idx) {
 
   // Guardar datos del paso actual antes de cambiar
   if (currentStep >= 0 && currentStep < steps.length) {
-    saveCurrentStepData();
+    await saveCurrentStepData();
   }
 
   // Iniciar animación de transición
@@ -1127,6 +1308,15 @@ async function showStep(idx) {
       // Configurar validación de nombres después de renderizar el paso 1
       if (idx === 0) {
         setupNameValidation();
+      }
+
+      // Actualizar lista de participantes después de renderizar el paso de Firma
+      // Usar ID del paso en lugar de índice para que funcione con pasos ocultos
+      // Usar setTimeout para asegurar que el DOM esté completamente renderizado
+      if (nextStepId === 'step-6') {
+        setTimeout(() => {
+          actualizarListaParticipantes();
+        }, 100);
       }
     } catch (error) {
       console.error('Error al renderizar el paso:', error);
@@ -1490,10 +1680,10 @@ if (!window.formData) {
     titulo: '',
     formato: '',
     genero: '',
-    productora: '',
+    productora: [],
     paises: [],
     anio: '',
-    idioma: '',
+    idioma: [],
     actores: '',
     directores: '',
     guionistas: '',
@@ -1530,7 +1720,7 @@ function saveStep1Data() {
   let step1 = {};
   Object.entries(campos).forEach(([key, element]) => {
     if (!element) return;
-    if ((key === 'paises' || key === 'productora') && element.multiple) {
+    if ((key === 'paises' || key === 'productora' || key === 'idioma') && element.multiple) {
       step1[key] = Array.from(element.selectedOptions).map(opt => opt.value);
       if (!step1[key] || step1[key].length === 0) step1[key] = [];
     } else if (element.type === 'checkbox' || element.type === 'radio') {
@@ -1556,7 +1746,7 @@ function restoreStep1Data(container) {
     'productora': Array.isArray(formData.step1.productora) ? formData.step1.productora : (formData.step1.productora ? [formData.step1.productora] : []),
     'paises': Array.isArray(formData.step1.paises) ? formData.step1.paises : (formData.step1.paises ? [formData.step1.paises] : []),
     'anio': formData.step1.anio || '',
-    'idioma': formData.step1.idioma || '',
+    'idioma': Array.isArray(formData.step1.idioma) ? formData.step1.idioma : (formData.step1.idioma ? [formData.step1.idioma] : []),
     'actores': formData.step1.actores || '',
     'directores': formData.step1.directores || '',
     'guionistas': formData.step1.guionistas || '',
@@ -1676,8 +1866,37 @@ function validarCamposNombres() {
 // Envío simulado
 // Función auxiliar para recolectar correos únicos y mantener todos los participantes
 function filtrarParticipantesSinCorreo(formDataToFilter) {
+  // Recopilar correos adicionales de los inputs antes de procesar el payload
+  const correosInputs = document.querySelectorAll('.correo-adicional-input');
+  console.log('Recopilando correos adicionales de inputs:', correosInputs.length);
+
+  correosInputs.forEach(input => {
+    const autor = input.getAttribute('data-autor');
+    const correo = input.value.trim();
+
+    if (autor && correo !== '') {
+      console.log(`Correo adicional encontrado: ${autor} -> ${correo}`);
+
+      // Guardar en formData para que se incluya en CorreosUnicos
+      if (!formDataToFilter.correosAdicionales) {
+        formDataToFilter.correosAdicionales = {};
+      }
+      formDataToFilter.correosAdicionales[autor] = correo;
+    }
+  });
+
+  console.log('Correos adicionales recopilados:', formDataToFilter.correosAdicionales);
+
   // Crear una copia profunda para no modificar el original
   const filteredData = JSON.parse(JSON.stringify(formDataToFilter));
+
+  // Normalizar arrays esperados por Power Automate
+  if (!Array.isArray(filteredData.participaciones)) {
+    filteredData.participaciones = [];
+  }
+  if (!Array.isArray(filteredData.stepEpisodios)) {
+    filteredData.stepEpisodios = [];
+  }
 
   // Crear un conjunto de correos únicos para evitar duplicados (solo para notificaciones)
   const correosUnicos = new Set();
@@ -1710,10 +1929,31 @@ function filtrarParticipantesSinCorreo(formDataToFilter) {
     // La estructura original se mantiene intacta
   }
 
+  // Agregar correos adicionales ingresados manualmente en el paso de Firma
+  if (filteredData.correosAdicionales && typeof filteredData.correosAdicionales === 'object') {
+    Object.values(filteredData.correosAdicionales).forEach(correo => {
+      if (correo && correo.trim() !== '') {
+        correosUnicos.add(correo.trim());
+      }
+    });
+  }
+
   // Crear una variable CorreosUnicos para Power Automate (solo correos válidos para notificaciones)
   filteredData.CorreosUnicos = Array.from(correosUnicos);
   console.log('Correos únicos para notificación:', filteredData.CorreosUnicos);
   console.log('Participaciones completas enviadas (incluye autores manuales):', filteredData);
+
+  // *** ELIMINAR CAMPOS AUXILIARES QUE NO ESTÁN EN EL ESQUEMA DE POWER AUTOMATE ***
+  // Estos campos solo se usan para la UI y restauración de datos, no deben enviarse
+  delete filteredData.step1;                    // Objeto completo duplicado de datos generales
+  delete filteredData.mismasParticipaciones;    // Flag para UI inline (caso "Sí" o "No")
+  delete filteredData.intervaloGeneral;         // Objeto auxiliar para restaurar intervalo inline
+  delete filteredData.participacionesGenerales; // Array auxiliar para restaurar participaciones inline
+  delete filteredData.titulosGenerales;         // Array auxiliar para restaurar títulos inline
+  delete filteredData.correosAdicionales;       // Correos ingresados manualmente (ya incluidos en CorreosUnicos)
+
+  console.log('Campos auxiliares eliminados del payload');
+  console.log('Payload final limpio:', filteredData);
 
   return filteredData;
 }
@@ -2015,10 +2255,10 @@ function agregarFilaParticipacion() {
 
   tbody.appendChild(fila);
 
-  // Cargar roles y configurar Select2
+  // Cargar roles y configurar Select2 (con encriptación para socios)
   Promise.all([
     fetchJSON('rol.json'),
-    fetchJSON('socios.json')
+    AppSecurity.loadData()
   ]).then(([roles, socios]) => {
     const rolSelect = document.getElementById(`rol-${filaId}`);
     const autorSelect = document.getElementById(`autor-${filaId}`);
@@ -2045,10 +2285,11 @@ function agregarFilaParticipacion() {
           width: '100%',
           allowClear: true,
           tags: true,
+          selectOnClose: true, // Permite escribir directamente y guardar al hacer clic fuera
           minimumInputLength: 2,
           ajax: {
             transport: function (params, success, failure) {
-              fetchJSON('socios.json').then(sociosRaw => {
+              AppSecurity.loadData().then(sociosRaw => {
                 const term = params.data.q ? params.data.q.toLowerCase() : '';
                 const autoresData = sociosRaw
                   .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
@@ -2090,6 +2331,17 @@ function agregarFilaParticipacion() {
               return 'No se encontró el autor. Puede crear uno nuevo.';
             }
           }
+        });
+
+        // Enfocar automáticamente el campo de búsqueda al abrir el Select2
+        $(autorSelect).on('select2:open', function () {
+          setTimeout(function () {
+            // Buscar el campo de búsqueda dentro del dropdown abierto
+            const searchField = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchField) {
+              searchField.focus();
+            }
+          }, 100); // Timeout para asegurar que el DOM esté listo
         });
       }
     }, 100);
@@ -2157,8 +2409,8 @@ function saveParticipacionesData() {
   const filas = document.querySelectorAll('.tabla-participaciones tbody tr');
   const participaciones = [];
 
-  // Obtener la lista de socios para buscar correos
-  fetchJSON('socios.json').then(socios => {
+  // Obtener la lista de socios para buscar correos (con encriptación)
+  AppSecurity.loadData().then(socios => {
     filas.forEach(fila => {
       const rol = fila.querySelector('.rol-select')?.value || '';
       const autor = fila.querySelector('.autor-select')?.value || '';
@@ -2248,7 +2500,7 @@ async function renderStepDatosTecnicos(container) {
       </div>
       
       <div class="form-group required">
-        <label for="destino">Destino</label>
+        <label for="destino">Destino inicial</label>
         <select id="destino" name="destino">
           <option value="">Selecciona...</option>
           ${destinos.filter(d => d.Destino).map(d => `<option value="${d.Destino}">${d.Destino}</option>`).join('')}
@@ -2264,6 +2516,16 @@ async function renderStepDatosTecnicos(container) {
         placeholder: $(this).find('option:first').text(),
         width: '100%',
         allowClear: true
+      });
+
+      // Agregar enfoque automático al campo de búsqueda
+      $(this).on('select2:open', function () {
+        setTimeout(function () {
+          const searchField = document.querySelector('.select2-container--open .select2-search__field');
+          if (searchField) {
+            searchField.focus();
+          }
+        }, 100);
       });
     });
   }
@@ -2303,48 +2565,792 @@ async function renderStepEpisodios(container) {
     return;
   }
 
-  // Si es serializada, mostrar el formulario de episodios con bloques dinámicos
+  // Si es serializada, mostrar primero la pregunta
   container.innerHTML = `
     <div class="wizard-section">
       <div class="section-header">
-        <h2>Bloques de Episodios</h2>
+        <h2>Gestión de Episodios y Participaciones</h2>
         <p class="section-description">
-          Registra la información de los episodios de tu obra serializada. Puedes crear múltiples bloques para agrupar episodios que tengan las mismas características (autores, roles y participaciones).
+          Antes de continuar, necesitamos saber cómo deseas gestionar las participaciones de tu obra serializada.
         </p>
-        <button type="button" class="btn btn-primary" id="addBloqueEpisodios">
-          <i class="fas fa-plus"></i> Agregar Bloque de Episodios
-        </button>
       </div>
       
-      <div id="bloquesEpisodiosContainer">
-        <!-- Los bloques de episodios se agregarán aquí dinámicamente -->
+      <!-- Pregunta sobre participaciones -->
+      <div class="pregunta-participaciones-container">
+        <div class="pregunta-box">
+          <label class="pregunta-label">
+            <i class="fas fa-question-circle"></i>
+            ¿Todos los episodios tienen las mismas participaciones?
+          </label>
+          <div class="pregunta-opciones">
+            <label class="radio-option">
+              <input type="radio" name="mismas-participaciones" value="si" id="radio-participaciones-si">
+              <span class="radio-label">Sí, todos los episodios tienen las mismas participaciones</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="mismas-participaciones" value="no" id="radio-participaciones-no">
+              <span class="radio-label">No, las participaciones varían por episodio o bloque</span>
+            </label>
+          </div>
+        </div>
+        <div class="note-box" style="margin-top: 0.8rem; background-color: #fff3cd; border-left-color: #ffc107;">
+          <div class="note-icon">⚠️</div>
+          <div class="note-content">
+            Si cambias entre "Sí" y "No", los valores ingresados se restablecerán para evitar datos inconsistentes.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contenedor para UI INLINE (caso "Sí") -->
+      <div id="participaciones-inline-container" style="display:none;">
+        <!-- Se llenará dinámicamente -->
+      </div>
+      
+      <!-- Contenedor para bloques de episodios (caso "No") -->
+      <div id="bloques-episodios-wrapper" style="display:none;">
+        <div class="section-header" style="margin-top: 2rem;">
+          <h2>Participaciones</h2>
+          
+          <!-- Nota Importante -->
+          <div class="note-box" style="margin-bottom: 1.5rem;">
+            <div class="note-icon">ℹ️</div>
+            <div class="note-content">
+              <strong>Importante:</strong> Como la obra tiene participaciones distintas entre los episodios (autores, roles y porcentajes) y para facilitar el registro de ellas es que en esta sección podrás registrar en la misma declaración todas las participaciones identificando a qué capítulos corresponde cada una.
+            </div>
+          </div>
+          
+          <!-- Nota de Instrucciones -->
+          <div class="note-box" style="margin-bottom: 1.5rem; background-color: #f8f9fa; border-left-color: #097137;">
+            <div class="note-icon">📋</div>
+            <div class="note-content">
+              <strong>Instrucciones:</strong>
+              <ol style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                <li style="margin-bottom: 0.5rem;">Indícanos a qué intervalo de episodios corresponde la primera declaración de participaciones. Registra a qué temporada corresponden y el número de episodio de inicio y de término del intervalo.</li>
+                <li style="margin-bottom: 0.5rem;">Se aperturará una tabla donde podrás agregar el título de cada uno de los episodios del intervalo. Esto es opcional pero si lo haces nos permites facilitar el registro y pagos de derechos.</li>
+                <li style="margin-bottom: 0.5rem;">Haz clic en "Registrar participaciones del intervalo" para declarar tu participación y la del resto de coautores, si las conoces.</li>
+                <li>Opcional: Puedes declarar los títulos extranjeros/traducidos de los episodios del intervalo. Para esto haz clic en "Registrar otros títulos".</li>
+              </ol>
+            </div>
+          </div>
+          
+          <button type="button" class="btn btn-primary" id="addBloqueEpisodios">
+            <i class="fas fa-plus"></i> Agregar Bloque de Episodios
+          </button>
+        </div>
+        
+        <div id="bloquesEpisodiosContainer">
+          <!-- Los bloques de episodios se agregarán aquí dinámicamente -->
+        </div>
       </div>
     </div>
   `;
 
-  // Inicializar la funcionalidad de bloques de episodios
-  inicializarBloquesEpisodios();
+  // Event listeners para los radio buttons
+  const radioSi = document.getElementById('radio-participaciones-si');
+  const radioNo = document.getElementById('radio-participaciones-no');
+  const inlineContainer = document.getElementById('participaciones-inline-container');
+  const bloquesWrapper = document.getElementById('bloques-episodios-wrapper');
 
-  // Limpiar datos de episodios si se está cambiando de formato no serializado a serializado
-  // Esto evita que se restauren datos incorrectos de formatos anteriores
-  if (formData.stepEpisodios && formData.stepEpisodios.length === 1 && 
-      formData.stepEpisodios[0].temporada === '' && 
-      formData.stepEpisodios[0].numero === '') {
-    // Estos son datos de obra no serializada, limpiarlos
-    delete formData.stepEpisodios;
+  if (radioSi) {
+    radioSi.addEventListener('change', function () {
+      if (this.checked) {
+        formData.mismasParticipaciones = 'si';
+        formData.stepEpisodios = [];
+        participacionesPorBloque = {};
+        titulosPorBloque = {};
+        contadorBloquesEpisodios = 0;
+        const bloquesContainerReset = document.getElementById('bloquesEpisodiosContainer');
+        if (bloquesContainerReset) bloquesContainerReset.innerHTML = '';
+        // Mostrar UI inline
+        inlineContainer.style.display = 'block';
+        bloquesWrapper.style.display = 'none';
+
+        // Renderizar la UI inline
+        renderParticipacionesInline();
+        const tbodyInline = document.getElementById('tbody-participaciones-inline');
+        if (tbodyInline) tbodyInline.innerHTML = '';
+        const tbodyTitulosInline = document.getElementById('tbody-titulos-inline');
+        if (tbodyTitulosInline) tbodyTitulosInline.innerHTML = '';
+        const tempGen = document.getElementById('temporada-general');
+        const desdeGen = document.getElementById('desde-episodio-general');
+        const hastaGen = document.getElementById('hasta-episodio-general');
+        if (tempGen) tempGen.value = '';
+        if (desdeGen) desdeGen.value = '';
+        if (hastaGen) hastaGen.value = '';
+        formData.intervaloGeneral = undefined;
+        formData.participacionesGenerales = [];
+        formData.titulosGenerales = [];
+      }
+    });
   }
 
-  // Restaurar bloques de episodios si existen datos guardados válidos
-  if (formData.stepEpisodios && formData.stepEpisodios.length > 0) {
-    restoreStepEpisodios(container);
-  } else {
-    // Si no hay datos guardados, crear automáticamente el primer bloque
-    // Esto asegura que siempre haya al menos un bloque disponible
-    setTimeout(() => {
-      agregarBloqueEpisodios();
-    }, 100);
+  if (radioNo) {
+    radioNo.addEventListener('change', function () {
+      if (this.checked) {
+        formData.mismasParticipaciones = 'no';
+        const tbodyInlineClear = document.getElementById('tbody-participaciones-inline');
+        if (tbodyInlineClear) tbodyInlineClear.innerHTML = '';
+        const tbodyTitulosInlineClear = document.getElementById('tbody-titulos-inline');
+        if (tbodyTitulosInlineClear) tbodyTitulosInlineClear.innerHTML = '';
+        const tempGenClear = document.getElementById('temporada-general');
+        const desdeGenClear = document.getElementById('desde-episodio-general');
+        const hastaGenClear = document.getElementById('hasta-episodio-general');
+        if (tempGenClear) tempGenClear.value = '';
+        if (desdeGenClear) desdeGenClear.value = '';
+        if (hastaGenClear) hastaGenClear.value = '';
+        formData.intervaloGeneral = undefined;
+        formData.participacionesGenerales = [];
+        formData.titulosGenerales = [];
+        // Mostrar UI de bloques
+        inlineContainer.style.display = 'none';
+        bloquesWrapper.style.display = 'block';
+
+        // Inicializar bloques de episodios
+        inicializarBloquesEpisodios();
+
+        // Restaurar o crear primer bloque
+        if (formData.stepEpisodios && formData.stepEpisodios.length > 0) {
+          restoreStepEpisodios(container);
+        } else {
+          setTimeout(() => {
+            agregarBloqueEpisodios();
+          }, 100);
+        }
+      }
+    });
+  }
+
+  // Restaurar selección si existe en formData
+  if (formData.mismasParticipaciones === 'si') {
+    radioSi.checked = true;
+    // NO disparar 'change' para evitar borrar los datos guardados
+    // Simular la lógica de visualización manualmente
+    inlineContainer.style.display = 'block';
+    bloquesWrapper.style.display = 'none';
+    renderParticipacionesInline();
+  } else if (formData.mismasParticipaciones === 'no') {
+    radioNo.checked = true;
+    radioNo.dispatchEvent(new Event('change'));
+  } else if (formData.stepEpisodios && formData.stepEpisodios.length > 0) {
+    // Si hay datos guardados de bloques, seleccionar "No"
+    radioNo.checked = true;
+    radioNo.dispatchEvent(new Event('change'));
+  } else if (formData.participacionesGenerales && formData.participacionesGenerales.length > 0) {
+    // Si hay datos guardados de participaciones generales, seleccionar "Sí"
+    radioSi.checked = true;
+    // Configurar el estado manualmente sin borrar datos
+    formData.mismasParticipaciones = 'si';
+    inlineContainer.style.display = 'block';
+    bloquesWrapper.style.display = 'none';
+    renderParticipacionesInline();
   }
 }
+
+// ========================================
+// FUNCIÓN PARA RENDERIZAR UI INLINE (CASO "SÍ")
+// ========================================
+async function renderParticipacionesInline() {
+  const container = document.getElementById('participaciones-inline-container');
+  if (!container) return;
+
+  // Cargar datos necesarios
+  const [roles, idiomas, paises] = await Promise.all([
+    fetchJSON('rol.json'),
+    fetchJSON('idioma.json'),
+    fetchJSON('paises.json')
+  ]);
+
+  container.innerHTML = `
+    <!-- SECCIÓN 1: Intervalo de episodios -->
+    <div class="inline-section">
+      <div class="inline-section-header">
+        <h3><i class="fas fa-list-ol"></i> Intervalo de Episodios</h3>
+        <p class="section-hint">Define el rango de episodios de tu obra serializada</p>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="temporada-general">Temporada *</label>
+          <input type="number" id="temporada-general" min="1" placeholder="Ej: 1" class="form-control">
+          <div class="input-hint">Número de temporada</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="desde-episodio-general">Desde episodio *</label>
+          <input type="number" id="desde-episodio-general" min="1" placeholder="Ej: 1" class="form-control">
+          <div class="input-hint">Primer episodio</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="hasta-episodio-general">Hasta episodio *</label>
+          <input type="number" id="hasta-episodio-general" min="1" placeholder="Ej: 10" class="form-control">
+          <div class="input-hint">Último episodio</div>
+        </div>
+      </div>
+      
+      <div class="cantidad-episodios-display">
+        <i class="fas fa-info-circle"></i>
+        <span>Cantidad de episodios: <strong id="cantidad-episodios-calc">0</strong></span>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: Participaciones generales -->
+    <div class="inline-section">
+      <div class="inline-section-header">
+        <h3><i class="fas fa-users"></i> Participaciones Generales</h3>
+        <p class="section-hint">Registra los derechohabientes de la obra y sus participaciones</p>
+      </div>
+      
+      <div class="note-box" style="margin-bottom: 1.5rem;">
+        <div class="note-icon">ℹ️</div>
+        <div class="note-content">
+          <strong>Registra los derechohabientes de la obra y sus participaciones.</strong><br>
+          Puedes agregar varias líneas de participación. Considera que la suma de los porcentajes de participación por rol no puede superar el 100%.
+        </div>
+      </div>
+      
+      <div class="note-box" style="margin-bottom: 1.5rem; background: #fff3cd; border-color: #ffc107;">
+        <div class="note-icon">⚠️</div>
+        <div class="note-content">
+          <strong>Indicaciones importantes:</strong><br>
+          • Si el autor no aparece en el listado igualmente se puede registrar su nombre y participación.<br>
+          • Las participaciones con decimal se deben registrar con punto, por ejemplo 30.5.
+        </div>
+      </div>
+      
+      <div class="tabla-participaciones-container">
+        <table class="tabla-participaciones tabla-participaciones-inline">
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Autor</th>
+              <th>% Participación</th>
+              <th>Eliminar</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-participaciones-inline">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline-success btn-agregar-participacion-inline">
+          <i class="fas fa-plus"></i> Agregar otra participación
+        </button>
+      </div>
+      
+      <div id="participacion-resumen-inline" class="participacion-resumen"></div>
+      <div id="participaciones-inline-error" class="form-message" style="color:#dc3545;"></div>
+    </div>
+
+    <!-- SECCIÓN 3: Títulos extranjeros/traducidos -->
+    <div class="inline-section">
+      <div class="inline-section-header">
+        <h3><i class="fas fa-globe"></i> Títulos extranjeros/traducidos de los episodios (opcional)</h3>
+        <p class="section-hint">Registra títulos alternativos si la obra se exhibió en otros idiomas o países</p>
+      </div>
+      
+      <div class="tabla-titulos-container">
+        <table class="tabla-titulos-inline">
+          <thead>
+            <tr>
+              <th>Otro título</th>
+              <th>Idioma</th>
+              <th>País</th>
+              <th>Eliminar</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-titulos-inline">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline-success btn-agregar-titulo-inline">
+          <i class="fas fa-plus"></i> Registrar otros títulos
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Configurar eventos para cálculo automático de cantidad de episodios
+  const desdeInput = document.getElementById('desde-episodio-general');
+  const hastaInput = document.getElementById('hasta-episodio-general');
+  const cantidadDisplay = document.getElementById('cantidad-episodios-calc');
+
+  function calcularCantidad() {
+    const desde = parseInt(desdeInput.value) || 0;
+    const hasta = parseInt(hastaInput.value) || 0;
+    const cantidad = (hasta >= desde && desde > 0) ? (hasta - desde + 1) : 0;
+    cantidadDisplay.textContent = cantidad;
+  }
+
+  desdeInput.addEventListener('input', calcularCantidad);
+  hastaInput.addEventListener('input', calcularCantidad);
+
+  // Configurar botón agregar participación
+  document.querySelector('.btn-agregar-participacion-inline').addEventListener('click', agregarFilaParticipacionInline);
+
+  // Configurar botón agregar título
+  document.querySelector('.btn-agregar-titulo-inline').addEventListener('click', agregarFilaTituloInline);
+
+  // Restaurar datos si existen
+  if (formData.intervaloGeneral) {
+    document.getElementById('temporada-general').value = formData.intervaloGeneral.temporada || '';
+    document.getElementById('desde-episodio-general').value = formData.intervaloGeneral.desde || '';
+    document.getElementById('hasta-episodio-general').value = formData.intervaloGeneral.hasta || '';
+    calcularCantidad();
+  }
+
+  // Restaurar participaciones
+  if (formData.participacionesGenerales && formData.participacionesGenerales.length > 0) {
+    for (const p of formData.participacionesGenerales) {
+      await agregarFilaParticipacionInline();
+      const filas = document.querySelectorAll('#tbody-participaciones-inline tr');
+      const ultimaFila = filas[filas.length - 1];
+      if (ultimaFila) {
+        const rolSelect = ultimaFila.querySelector('.rol-select-inline');
+        const autorSelect = ultimaFila.querySelector('.autor-select-inline');
+        const porcentajeInput = ultimaFila.querySelector('.porcentaje-inline');
+
+        if (rolSelect && p.rol) {
+          rolSelect.value = p.rol;
+          if (window.$ && window.$.fn.select2) {
+            $(rolSelect).trigger('change');
+          }
+        }
+
+        if (autorSelect && p.autor) {
+          const option = new Option(p.autor, p.autor, true, true);
+          autorSelect.appendChild(option);
+          if (window.$ && window.$.fn.select2) {
+            $(autorSelect).trigger('change');
+          }
+        }
+
+        if (porcentajeInput && p.porcentaje) {
+          porcentajeInput.value = p.porcentaje;
+        }
+      }
+    }
+  } else {
+    // Agregar una fila vacía por defecto
+    agregarFilaParticipacionInline();
+  }
+
+  // Restaurar títulos
+  if (formData.titulosGenerales && formData.titulosGenerales.length > 0) {
+    for (const t of formData.titulosGenerales) {
+      await agregarFilaTituloInline();
+      const filas = document.querySelectorAll('#tbody-titulos-inline tr');
+      const ultimaFila = filas[filas.length - 1];
+      if (ultimaFila) {
+        const tituloInput = ultimaFila.querySelector('.titulo-inline');
+        const idiomaSelect = ultimaFila.querySelector('.idioma-inline');
+        const paisSelect = ultimaFila.querySelector('.pais-inline');
+
+        if (tituloInput) tituloInput.value = t.titulo || '';
+        if (idiomaSelect) {
+          idiomaSelect.value = t.idioma || '';
+          if (window.$ && window.$.fn.select2) {
+            $(idiomaSelect).trigger('change');
+          }
+        }
+        if (paisSelect) {
+          paisSelect.value = t.pais || '';
+          if (window.$ && window.$.fn.select2) {
+            $(paisSelect).trigger('change');
+          }
+        }
+      }
+    }
+  }
+}
+
+// ========================================
+// FUNCIONES AUXILIARES PARA UI INLINE
+// ========================================
+
+// Contador global para IDs únicos de filas inline
+let contadorFilasInline = 0;
+
+// Función para agregar fila de participación inline
+async function agregarFilaParticipacionInline() {
+  const tbody = document.getElementById('tbody-participaciones-inline');
+  if (!tbody) return;
+
+  // Verificar si ya hay 10 participaciones
+  const filas = tbody.querySelectorAll('tr');
+  if (filas.length >= 10) {
+    alert('No se pueden agregar más de 10 participaciones.');
+    return;
+  }
+
+  contadorFilasInline++;
+  const filaId = `fila-participacion-inline-${contadorFilasInline}`;
+
+  // Cargar datos necesarios (con encriptación para socios)
+  const [roles, socios] = await Promise.all([
+    fetchJSON('rol.json'),
+    AppSecurity.loadData()
+  ]);
+
+  const fila = document.createElement('tr');
+  fila.id = filaId;
+  fila.innerHTML = `
+    <td>
+      <select class="form-control rol-select-inline" id="rol-inline-${contadorFilasInline}">
+        <option value="">Selecciona...</option>
+        ${roles.map(r => `<option value="${r.Rol}">${r.Rol}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="form-control autor-select-inline" id="autor-inline-${contadorFilasInline}">
+        <option value="">Selecciona o escribe...</option>
+      </select>
+    </td>
+    <td>
+      <input type="number" 
+             class="form-control porcentaje-inline" 
+             id="porcentaje-inline-${contadorFilasInline}" 
+             min="0" 
+             max="100" 
+             step="0.01" 
+             placeholder="0.00">
+    </td>
+    <td style="text-align: center;">
+      <button type="button" 
+              class="btn btn-sm btn-outline-danger btn-eliminar-participacion-inline" 
+              onclick="eliminarFilaParticipacionInline('${filaId}')">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  `;
+
+  tbody.appendChild(fila);
+
+  // Inicializar Select2 para rol
+  const rolSelect = document.getElementById(`rol-inline-${contadorFilasInline}`);
+  if (window.$ && window.$.fn.select2) {
+    $(rolSelect).select2({
+      placeholder: 'Selecciona...',
+      width: '100%',
+      allowClear: true
+    });
+  }
+
+  // Inicializar Select2 para autor con búsqueda y creación
+  const autorSelect = document.getElementById(`autor-inline-${contadorFilasInline}`);
+  if (window.$ && window.$.fn.select2) {
+    $(autorSelect).select2({
+      placeholder: 'Buscar o agregar autor...',
+      width: '100%',
+      allowClear: true,
+      tags: true,
+      minimumInputLength: 2,
+      ajax: {
+        transport: function (params, success, failure) {
+          AppSecurity.loadData().then(sociosRaw => {
+            const term = params.data.q ? params.data.q.toLowerCase() : '';
+            const autoresData = sociosRaw
+              .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
+              .map(socio => {
+                const tieneCorreo = socio["Correo electrónico"] && socio["Correo electrónico"].trim() !== '';
+                const iconoCorreo = tieneCorreo ? '✓' : '✗';
+                const textoCorreo = tieneCorreo ? socio["Correo electrónico"] : 'Sin correo';
+
+                return {
+                  id: socio["Nombre completo"],
+                  text: socio["Nombre completo"],
+                  correo: socio["Correo electrónico"] || '',
+                  tieneCorreo: tieneCorreo,
+                  html: `<div class="autor-option ${tieneCorreo ? 'tiene-correo' : 'sin-correo'}">
+                          <span class="autor-nombre">${socio["Nombre completo"]}</span>
+                          <span class="autor-correo-info">${iconoCorreo} ${textoCorreo}</span>
+                        </div>`
+                };
+              });
+            success({ results: autoresData });
+          }).catch(failure);
+        },
+        processResults: function (data) {
+          return { results: data.results };
+        },
+        templateResult: function (data) {
+          if (data.html) {
+            return $(data.html);
+          }
+          return data.text;
+        }
+      },
+      language: {
+        inputTooShort: function () {
+          return 'Escribe al menos 2 caracteres para buscar autores.';
+        },
+        noResults: function () {
+          return 'No se encontró el autor. Puede crear uno nuevo.';
+        }
+      }
+    });
+  }
+
+  // Agregar event listeners para validación
+  rolSelect.addEventListener('change', validarParticipacionesInline);
+  document.getElementById(`porcentaje-inline-${contadorFilasInline}`).addEventListener('input', validarParticipacionesInline);
+}
+
+// Función para eliminar fila de participación inline
+function eliminarFilaParticipacionInline(filaId) {
+  const fila = document.getElementById(filaId);
+  if (fila) {
+    fila.classList.add('removing');
+    setTimeout(() => {
+      fila.remove();
+      validarParticipacionesInline();
+    }, 300);
+  }
+}
+
+// Función para agregar fila de título inline
+async function agregarFilaTituloInline() {
+  const tbody = document.getElementById('tbody-titulos-inline');
+  if (!tbody) return;
+
+  contadorFilasInline++;
+  const filaId = `fila-titulo-inline-${contadorFilasInline}`;
+
+  // Cargar datos necesarios
+  const [idiomas, paises] = await Promise.all([
+    fetchJSON('idioma.json'),
+    fetchJSON('paises.json')
+  ]);
+
+  const fila = document.createElement('tr');
+  fila.id = filaId;
+  fila.innerHTML = `
+    <td>
+      <input type="text" 
+             class="form-control titulo-inline" 
+             placeholder="Título alternativo">
+    </td>
+    <td>
+      <select class="form-control idioma-inline" id="idioma-inline-${contadorFilasInline}">
+        <option value="">Selecciona...</option>
+        ${idiomas.filter(i => i.Idioma).map(i => `<option value="${i.Idioma}">${i.Idioma}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="form-control pais-inline" id="pais-inline-${contadorFilasInline}">
+        <option value="">Selecciona...</option>
+        ${paises.map(p => `<option value="${p["Nombre del país"]}">${p["Nombre del país"]}</option>`).join('')}
+      </select>
+    </td>
+    <td style="text-align: center;">
+      <button type="button" 
+              class="btn btn-sm btn-outline-danger btn-eliminar-titulo-inline" 
+              onclick="eliminarFilaTituloInline('${filaId}')">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  `;
+
+  tbody.appendChild(fila);
+
+  // Inicializar Select2
+  if (window.$ && window.$.fn.select2) {
+    $(`#idioma-inline-${contadorFilasInline}`).select2({
+      placeholder: 'Selecciona...',
+      width: '100%',
+      allowClear: true
+    });
+
+    $(`#pais-inline-${contadorFilasInline}`).select2({
+      placeholder: 'Selecciona...',
+      width: '100%',
+      allowClear: true
+    });
+  }
+}
+
+// Función para eliminar fila de título inline
+function eliminarFilaTituloInline(filaId) {
+  const fila = document.getElementById(filaId);
+  if (fila) {
+    fila.classList.add('removing');
+    setTimeout(() => {
+      fila.remove();
+    }, 300);
+  }
+}
+
+// Función para validar participaciones inline
+function validarParticipacionesInline() {
+  console.log('=== VALIDANDO PARTICIPACIONES INLINE ===');
+  const filas = document.querySelectorAll('#tbody-participaciones-inline tr');
+  const sumas = {};
+  let error = '';
+
+  filas.forEach(fila => {
+    const rolSelect = fila.querySelector('.rol-select-inline');
+    const porcentajeInput = fila.querySelector('.porcentaje-inline');
+
+    if (!rolSelect || !porcentajeInput) return;
+
+    const rol = rolSelect.value;
+    const porcentaje = parseFloat(porcentajeInput.value) || 0;
+
+    if (rol && porcentaje > 0) {
+      if (!sumas[rol]) sumas[rol] = 0;
+      sumas[rol] += porcentaje;
+    }
+  });
+
+  // Verificar que ningún rol supere el 100%
+  for (const rol in sumas) {
+    if (sumas[rol] > 100.001) {
+      error = `La suma de participación para el rol "${rol}" supera el 100% (actual: ${sumas[rol].toFixed(2)}%)`;
+      break;
+    }
+  }
+
+  // Mostrar resumen
+  const resumenDiv = document.getElementById('participacion-resumen-inline');
+  const errorDiv = document.getElementById('participaciones-inline-error');
+
+  if (error) {
+    errorDiv.textContent = error;
+    errorDiv.style.display = 'block';
+    if (resumenDiv) resumenDiv.innerHTML = '';
+    return false;
+  } else {
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
+
+    // Generar resumen
+    if (resumenDiv) {
+      let resumenHTML = '<div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">';
+      resumenHTML += '<h4 style="margin: 0 0 10px 0; color: #097137;">Resumen de Participaciones</h4>';
+
+      if (Object.keys(sumas).length === 0) {
+        resumenHTML += '<p style="margin: 0; color: #666;">No hay participaciones registradas</p>';
+      } else {
+        resumenHTML += '<ul style="margin: 0; padding-left: 20px;">';
+        for (const rol in sumas) {
+          const porcentaje = sumas[rol].toFixed(2);
+          const color = sumas[rol] <= 100 ? '#28a745' : '#dc3545';
+          resumenHTML += `<li style="color: ${color};"><strong>${rol}:</strong> ${porcentaje}%</li>`;
+        }
+        resumenHTML += '</ul>';
+      }
+      resumenHTML += '</div>';
+
+      resumenDiv.innerHTML = resumenHTML;
+    }
+    return true;
+  }
+}
+
+// Función para guardar datos inline
+async function saveParticipacionesInlineData() {
+  console.log('=== GUARDANDO DATOS INLINE ===');
+
+  // Guardar selección
+  const radioSi = document.getElementById('radio-participaciones-si');
+  if (radioSi && radioSi.checked) {
+    formData.mismasParticipaciones = 'si';
+
+    // Guardar intervalo
+    const temporada = document.getElementById('temporada-general')?.value || '';
+    const desde = document.getElementById('desde-episodio-general')?.value || '';
+    const hasta = document.getElementById('hasta-episodio-general')?.value || '';
+
+    formData.intervaloGeneral = {
+      temporada: temporada,
+      desde: desde,
+      hasta: hasta
+    };
+
+    // Guardar participaciones inline
+    const filasParticipaciones = document.querySelectorAll('#tbody-participaciones-inline tr');
+    const participaciones = [];
+
+    // Cargar socios para obtener los correos (con encriptación)
+    const socios = await AppSecurity.loadData();
+
+    filasParticipaciones.forEach(fila => {
+      const rol = fila.querySelector('.rol-select-inline')?.value || '';
+      const autor = fila.querySelector('.autor-select-inline')?.value || '';
+      const porcentaje = fila.querySelector('.porcentaje-inline')?.value || '';
+
+      if (rol && autor && porcentaje) {
+        // Buscar el correo del autor en socios.json
+        const socio = socios.find(s => s["Nombre completo"] === autor);
+        const correo = socio ? (socio["Correo electrónico"] || '') : '';
+
+        participaciones.push({
+          rol,
+          autor,
+          porcentaje,
+          correo // Agregar correo para CorreosUnicos
+        });
+      }
+    });
+
+    // Guardar títulos inline
+    const filasTitulos = document.querySelectorAll('#tbody-titulos-inline tr');
+    const titulosAlternativos = [];
+
+    filasTitulos.forEach(fila => {
+      const titulo = fila.querySelector('.titulo-inline')?.value || '';
+      const idioma = fila.querySelector('.idioma-inline')?.value || '';
+      const pais = fila.querySelector('.pais-inline')?.value || '';
+
+      if (titulo && idioma && pais) {
+        titulosAlternativos.push({ titulo, idioma, pais });
+      }
+    });
+
+    // *** IMPORTANTE: Para obras SERIALIZADAS, las participaciones van en stepEpisodios ***
+    // NO en el campo "participaciones" que es solo para obras NO serializadas
+
+    // Para obras serializadas, establecer participaciones como array vacío
+    // Esto evita errores en Power Automate cuando intenta iterar sobre participaciones
+    formData.participaciones = [];
+
+    // Crear la estructura stepEpisodios en el formato del esquema
+    // Para obras serializadas con "Sí", creamos UN SOLO objeto que representa todo el intervalo
+    formData.stepEpisodios = [{
+      temporada: temporada,
+      numero: '', // No aplica para el caso "Sí"
+      tituloEpisodio: '', // No aplica para el caso "Sí"
+      desdeEpisodio: desde,
+      hastaEpisodio: hasta,
+      participaciones: participaciones, // Las mismas participaciones para todos los episodios
+      titulosAlternativos: titulosAlternativos // Los mismos títulos para todos los episodios
+    }];
+
+    // Guardar también en campos auxiliares para restauración en UI
+    formData.participacionesGenerales = participaciones;
+    formData.titulosGenerales = titulosAlternativos;
+
+    console.log('Datos inline guardados en formato compatible con esquema (SOLO stepEpisodios):', {
+      mismasParticipaciones: formData.mismasParticipaciones,
+      intervaloGeneral: formData.intervaloGeneral,
+      participaciones: formData.participaciones, // Array vacío para obras serializadas
+      stepEpisodios: formData.stepEpisodios,
+      participacionesGenerales: formData.participacionesGenerales,
+      titulosGenerales: formData.titulosGenerales
+    });
+  } else {
+    formData.mismasParticipaciones = 'no';
+  }
+}
+
+// Hacer funciones globales para onclick
+window.eliminarFilaParticipacionInline = eliminarFilaParticipacionInline;
+window.eliminarFilaTituloInline = eliminarFilaTituloInline;
 
 function validateStepEpisodios() {
   // Intentar obtener el valor del campo formato directamente del DOM
@@ -2358,66 +3364,132 @@ function validateStepEpisodios() {
     return true;
   }
 
-  // Verificar que haya al menos un bloque de episodios
-  const bloques = document.querySelectorAll('.bloque-episodios');
-  if (bloques.length === 0) {
-    showMessage('Debe crear al menos un bloque de episodios.', true);
+  // Verificar qué opción se seleccionó
+  const radioSi = document.getElementById('radio-participaciones-si');
+  const radioNo = document.getElementById('radio-participaciones-no');
+
+  if (!radioSi || !radioNo) {
+    showMessage('Por favor, selecciona una opción sobre las participaciones.', true);
     return false;
   }
 
-  let isValid = true;
+  if (!radioSi.checked && !radioNo.checked) {
+    showMessage('Por favor, selecciona si todos los episodios tienen las mismas participaciones.', true);
+    return false;
+  }
 
-  // Validar cada bloque
-  bloques.forEach((bloque, index) => {
-    const bloqueId = bloque.id.replace('bloque-episodios-', '');
+  // CASO "SÍ": Validar UI inline
+  if (radioSi.checked) {
+    let isValid = true;
 
-    // Validar intervalo de episodios
-    const desdeEpisodio = parseInt(bloque.querySelector('.desde-episodio').value) || 0;
-    const hastaEpisodio = parseInt(bloque.querySelector('.hasta-episodio').value) || 0;
+    // Validar intervalo
+    const temporada = document.getElementById('temporada-general')?.value;
+    const desde = document.getElementById('desde-episodio-general')?.value;
+    const hasta = document.getElementById('hasta-episodio-general')?.value;
 
-    if (desdeEpisodio === 0 || hastaEpisodio === 0) {
-      showMessage(`El bloque #${index + 1} debe tener un intervalo de episodios válido.`, true);
+    if (!temporada || !desde || !hasta) {
+      showMessage('Por favor, completa el intervalo de episodios (temporada, desde, hasta).', true);
       isValid = false;
     }
 
-    // Eliminada la validación molesta de episodio final menor al inicial
+    if (parseInt(desde) > parseInt(hasta)) {
+      showMessage('El episodio inicial no puede ser mayor que el episodio final.', true);
+      isValid = false;
+    }
 
+    // Validar participaciones
+    const filasParticipaciones = document.querySelectorAll('#tbody-participaciones-inline tr');
+    if (filasParticipaciones.length === 0) {
+      showMessage('Debes agregar al menos una participación.', true);
+      isValid = false;
+    }
 
-    // Verificar si hay participaciones guardadas para este bloque específico
-    const hayParticipacionesEnBloque = participacionesPorBloque[bloqueId] &&
-      Array.isArray(participacionesPorBloque[bloqueId]) &&
-      participacionesPorBloque[bloqueId].length > 0;
+    // Validar que todas las filas tengan datos completos
+    let hayFilasIncompletas = false;
+    filasParticipaciones.forEach((fila, index) => {
+      const rol = fila.querySelector('.rol-select-inline')?.value;
+      const autor = fila.querySelector('.autor-select-inline')?.value;
+      const porcentaje = fila.querySelector('.porcentaje-inline')?.value;
 
-    // Solo validar líneas individuales si no hay participaciones guardadas en el modal para este bloque
-    if (!hayParticipacionesEnBloque) {
-      const lineasParticipacion = bloque.querySelectorAll('.linea-participacion');
-      if (lineasParticipacion.length === 0) {
-        showMessage(`El bloque #${index + 1} debe tener al menos una línea de participación. Haz clic "Gestionar participaciones" para registrar todas las participaciones del bloque de episodios.`, true);
-        isValid = false;
-      }
-
-      // Validar porcentajes de participación solo si hay líneas individuales
-      const sumas = {};
-      lineasParticipacion.forEach(linea => {
-        const rol = linea.querySelector('.rol-participacion').value;
-        const porcentaje = parseFloat(linea.querySelector('.porcentaje-participacion').value) || 0;
-
-        if (rol && porcentaje > 0) {
-          if (!sumas[rol]) sumas[rol] = 0;
-          sumas[rol] += porcentaje;
-        }
-      });
-
-      for (const rol in sumas) {
-        if (sumas[rol] > 100.001) {
-          showMessage(`En el bloque #${index + 1}, la suma de participación para el rol "${rol}" supera el 100%.`, true);
+      if (rol || autor || porcentaje) {
+        if (!rol || !autor || !porcentaje) {
+          showMessage(`La participación #${index + 1} está incompleta. Completa todos los campos o elimínala.`, true);
+          hayFilasIncompletas = true;
           isValid = false;
         }
       }
-    }
-  });
+    });
 
-  return isValid;
+    // Validar sumas de porcentajes solo si no hay filas incompletas
+    if (!hayFilasIncompletas && !validarParticipacionesInline()) {
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  // CASO "NO": Validar bloques (lógica original)
+  if (radioNo.checked) {
+    // Verificar que haya al menos un bloque de episodios
+    const bloques = document.querySelectorAll('.bloque-episodios');
+    if (bloques.length === 0) {
+      showMessage('Debe crear al menos un bloque de episodios.', true);
+      return false;
+    }
+
+    let isValid = true;
+
+    // Validar cada bloque
+    bloques.forEach((bloque, index) => {
+      const bloqueId = bloque.id.replace('bloque-episodios-', '');
+
+      // Validar intervalo de episodios
+      const desdeEpisodio = parseInt(bloque.querySelector('.desde-episodio').value) || 0;
+      const hastaEpisodio = parseInt(bloque.querySelector('.hasta-episodio').value) || 0;
+
+      if (desdeEpisodio === 0 || hastaEpisodio === 0) {
+        showMessage(`El bloque #${index + 1} debe tener un intervalo de episodios válido.`, true);
+        isValid = false;
+      }
+
+      // Verificar si hay participaciones guardadas para este bloque específico
+      const hayParticipacionesEnBloque = participacionesPorBloque[bloqueId] &&
+        Array.isArray(participacionesPorBloque[bloqueId]) &&
+        participacionesPorBloque[bloqueId].length > 0;
+
+      // Solo validar líneas individuales si no hay participaciones guardadas en el modal para este bloque
+      if (!hayParticipacionesEnBloque) {
+        const lineasParticipacion = bloque.querySelectorAll('.linea-participacion');
+        if (lineasParticipacion.length === 0) {
+          showMessage(`El bloque #${index + 1} debe tener al menos una línea de participación. Haz clic "Gestionar participaciones" para registrar todas las participaciones del bloque de episodios.`, true);
+          isValid = false;
+        }
+
+        // Validar porcentajes de participación solo si hay líneas individuales
+        const sumas = {};
+        lineasParticipacion.forEach(linea => {
+          const rol = linea.querySelector('.rol-participacion').value;
+          const porcentaje = parseFloat(linea.querySelector('.porcentaje-participacion').value) || 0;
+
+          if (rol && porcentaje > 0) {
+            if (!sumas[rol]) sumas[rol] = 0;
+            sumas[rol] += porcentaje;
+          }
+        });
+
+        for (const rol in sumas) {
+          if (sumas[rol] > 100.001) {
+            showMessage(`En el bloque #${index + 1}, la suma de participación para el rol "${rol}" supera el 100%.`, true);
+            isValid = false;
+          }
+        }
+      }
+    });
+
+    return isValid;
+  }
+
+  return true;
 }
 
 // Función para inicializar la funcionalidad de bloques de episodios
@@ -2467,9 +3539,16 @@ function restoreStepEpisodios(container) {
         desdeEpisodio: episodioData.desdeEpisodio,
         hastaEpisodio: episodioData.hastaEpisodio,
         participaciones: episodioData.participaciones || [],
-        titulosAlternativos: episodioData.titulosAlternativos || []
+        titulosAlternativos: episodioData.titulosAlternativos || [],
+        episodios: []
       });
     }
+    const grupo = bloquesAgrupados.get(claveBloque);
+    grupo.episodios.push({
+      numero: episodioData.numero,
+      titulo: episodioData.tituloEpisodio || '',
+      titulosAlternativos: episodioData.titulosAlternativos || []
+    });
   });
 
   // Restaurar cada bloque agrupado
@@ -2500,7 +3579,7 @@ function restoreStepEpisodios(container) {
                 <h4>¿Instrucciones para declarar episodios:</h4>
                 <p>En cada bloque de episodios, registra el intervalo de episodios que comparten los mismos autores, roles y porcentajes de participación.</p>
                 <p>Esto te permitirá agrupar episodios con características similares y simplificar la declaración.</p>
-                </div>
+              </div>
             </div>
           </div>
           <button type="button" class="btn-toggle-bloque" data-bloque-id="${bloqueId}">
@@ -2509,59 +3588,71 @@ function restoreStepEpisodios(container) {
         </div>
         <div class="bloque-episodios bloque-episodios-content" id="bloque-episodios-${bloqueId}">
           <div class="bloque-header">
-          <div class="bloque-tools">
-            <button type="button" class="btn btn-secondary btn-importar-titulos" data-bloque-id="${bloqueId}"><i class="fas fa-file-import"></i> Importar títulos</button>
-            <input type="file" accept=".csv, .xlsx, .xls" class="input-importar-titulos" data-bloque-id="${bloqueId}" style="display:none">
-            <button type="button" class="btn btn-secondary btn-pegar-titulos" data-bloque-id="${bloqueId}"><i class="fas fa-paste"></i> Pegar títulos</button>
+            <button type="button" class="btn-eliminar" data-bloque-id="${bloqueId}">
+              <span>×</span> Eliminar Bloque
+            </button>
           </div>
-          <button type="button" class="btn-eliminar" data-bloque-id="${bloqueId}">
-            <span>×</span> Eliminar Bloque
-          </button>
-        </div>
-            <!-- Subbloque 1: Intervalo de episodios -->
-            <div class="subbloque">
-              <h4>Intervalo de episodios</h4>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Temporada</label>
-                  <input type="number" class="temporada" min="1" placeholder="N°" value="${bloqueData.temporada || ''}">
-                </div>
-                <div class="form-group">
-                  <label>Desde episodio</label>
-                  <input type="number" class="desde-episodio" min="1" placeholder="Número de episodio" value="${bloqueData.desdeEpisodio || ''}">
-                  <div class="input-hint hint-desde-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar temporada para habilitar este campo.</div>
-                </div>
-                <div class="form-group">
-                  <label>Hasta episodio</label>
-                  <input type="number" class="hasta-episodio" min="1" placeholder="Número de episodio" value="${bloqueData.hastaEpisodio || ''}">
-                  <div class="input-hint hint-hasta-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar 'Desde episodio' para habilitar este campo.</div>
-                </div>
+          <div class="subbloque">
+            <h4>Intervalo de episodios</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Temporada</label>
+                <input type="number" class="temporada" min="1" placeholder="N°" value="${bloqueData.temporada || ''}">
               </div>
-              <div class="tabla-episodios-container" style="display: none;">
-                <div class="episodios-individuales">
-                  <!-- Los episodios se generarán aquí dinámicamente -->
-                </div>
+              <div class="form-group">
+                <label>Desde episodio</label>
+                <input type="number" class="desde-episodio" min="1" placeholder="Número de episodio" value="${bloqueData.desdeEpisodio || ''}">
+                <div class="input-hint hint-desde-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar temporada para habilitar este campo.</div>
+              </div>
+              <div class="form-group">
+                <label>Hasta episodio</label>
+                <input type="number" class="hasta-episodio" min="1" placeholder="Número de episodio" value="${bloqueData.hastaEpisodio || ''}">
+                <div class="input-hint hint-hasta-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar 'Desde episodio' para habilitar este campo.</div>
               </div>
             </div>
-            
-            <!-- Subbloque 2: Títulos de episodios -->
-            <div class="subbloque">
-              <h4>Títulos de episodios</h4>
-              <div class="episodios-titulos">
-                <!-- Los títulos de episodios se generarán aquí -->
+            <div class="note-box" style="margin-top: 1rem; margin-bottom: 0.5rem; background-color: #f0f8ff; border-left-color: #0066cc;">
+              <div class="note-icon">💡</div>
+              <div class="note-content">
+                <strong>Nota:</strong> Si prefieres omitir los títulos de los episodios, quedarán registrados automáticamente en nuestro sistema con el siguiente formato: <em>Nombre de la Obra - T01E001</em>
               </div>
-              <button type="button" class="btn btn-outline-success btn-gestionar-titulos" style="margin-top:10px;">
-                <i class="fas fa-table"></i> Gestionar Otros Títulos
-              </button>
             </div>
-            
-            <!-- Subbloque 3: Líneas de participación -->
-            <div class="subbloque">
-              <h4>Líneas de participación</h4>
-              <button type="button" class="btn btn-outline-success btn-gestionar-participaciones" style="margin-top:10px;" data-bloque-id="${bloqueId}">
-                <i class="fas fa-table"></i> Gestionar participaciones
-              </button>
+            <div class="tabla-episodios-container" style="display: none;">
+              <div class="episodios-individuales"></div>
             </div>
+          </div>
+          <div class="subbloque">
+            <h4>Líneas de participación <span style="color: #dc3545;">*</span></h4>
+            <div class="note-box" style="margin-bottom: 1rem;">
+              <div class="note-icon">ℹ️</div>
+              <div class="note-content">
+                Registra los derechohabientes de la obra y sus participaciones. Puedes agregar varias líneas de participación. Considera que la suma de los porcentajes de participación por rol no puede superar el 100%.
+              </div>
+            </div>
+            <div class="note-box" style="margin-bottom: 1rem; background-color: #f8f9fa; border-left-color: #097137;">
+              <div class="note-icon">📋</div>
+              <div class="note-content">
+                <strong>Indicaciones importantes:</strong>
+                <ol style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                  <li style="margin-bottom: 0.3rem;">Si el autor no aparece en el listado igualmente se puede registrar su nombre y participación.</li>
+                  <li>Las participaciones con decimal se deben registrar con punto, por ejemplo 30.5</li>
+                </ol>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-success btn-gestionar-participaciones" style="margin-top:10px;" data-bloque-id="${bloqueId}">
+              <i class="fas fa-table"></i> Registrar participaciones del intervalo
+            </button>
+          </div>
+          <div class="subbloque">
+            <h4>Títulos extranjeros/traducidos de los episodios (opcional)</h4>
+            <div class="episodios-titulos"></div>
+            <button type="button" class="btn btn-outline-success btn-gestionar-titulos" style="margin-top:10px;" data-bloque-id="${bloqueId}">
+              <i class="fas fa-table"></i> Registrar otros títulos
+            </button>
+          </div>
+          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e0e0e0;">
+            <button type="button" class="btn btn-primary btn-agregar-otro-intervalo" data-bloque-id="${bloqueId}">
+              <i class="fas fa-plus"></i> Agregar otro intervalo de episodios
+            </button>
           </div>
         </div>
       </div>
@@ -2590,15 +3681,38 @@ function restoreStepEpisodios(container) {
     // Generar tabla automáticamente al restaurar el bloque
     generarTablaEpisodios(bloqueId);
 
-    // Si hay datos de intervalo, generar episodios
-    if (bloqueData.desde && bloqueData.hasta) {
-      setTimeout(() => {
-        generarEpisodiosIndividuales(bloqueId, bloqueData.desde, bloqueData.hasta);
-        setTimeout(() => {
-          restaurarDatosEpisodios(bloqueId, bloqueData);
-        }, 100);
-      }, 50);
+    const todosBloques = document.querySelectorAll('.bloque-episodios-colapsable');
+    todosBloques.forEach((bloque, index) => {
+      const btnEliminar = bloque.querySelector('.btn-eliminar');
+      if (btnEliminar) {
+        if (index === 0) {
+          btnEliminar.style.display = 'none';
+          btnEliminar.disabled = true;
+        } else {
+          btnEliminar.style.display = '';
+          btnEliminar.disabled = false;
+        }
+      }
+    });
+
+    // Mostrar resumen de participaciones si existen datos guardados para el bloque
+    if (participacionesPorBloque[bloqueId] && Array.isArray(participacionesPorBloque[bloqueId]) && participacionesPorBloque[bloqueId].length > 0) {
+      mostrarTablaResumenParticipaciones(bloqueId);
     }
+
+    // Si hay datos de intervalo, generar episodios
+      if (bloqueData.desdeEpisodio && bloqueData.hastaEpisodio) {
+        setTimeout(() => {
+          generarEpisodiosIndividuales(bloqueId, bloqueData.desdeEpisodio, bloqueData.hastaEpisodio);
+          setTimeout(() => {
+            restaurarDatosEpisodios(bloqueId, bloqueData);
+            // Reinsertar resumen de participaciones tras restaurar datos
+            if (participacionesPorBloque[bloqueId] && Array.isArray(participacionesPorBloque[bloqueId]) && participacionesPorBloque[bloqueId].length > 0) {
+              mostrarTablaResumenParticipaciones(bloqueId);
+            }
+          }, 100);
+        }, 50);
+      }
   });
 }
 
@@ -2680,11 +3794,6 @@ function agregarBloqueEpisodios() {
       </div>
       <div class="bloque-episodios bloque-episodios-content" id="bloque-episodios-${contadorBloquesEpisodios}">
         <div class="bloque-header">
-        <div class="bloque-tools">
-          <button type="button" class="btn btn-secondary btn-importar-titulos" data-bloque-id="${contadorBloquesEpisodios}"><i class="fas fa-file-import"></i> Importar títulos</button>
-          <input type="file" accept=".csv, .xlsx, .xls" class="input-importar-titulos" data-bloque-id="${contadorBloquesEpisodios}" style="display:none">
-          <button type="button" class="btn btn-secondary btn-pegar-titulos" data-bloque-id="${contadorBloquesEpisodios}"><i class="fas fa-paste"></i> Pegar títulos</button>
-        </div>
         <button type="button" class="btn-eliminar" data-bloque-id="${contadorBloquesEpisodios}">
           <span>×</span> Eliminar Bloque
         </button>
@@ -2709,6 +3818,15 @@ function agregarBloqueEpisodios() {
             <div class="input-hint hint-hasta-episodio" style="color:#888;font-size:0.95em;display:none;">Debe ingresar 'Desde episodio' para habilitar este campo.</div>
           </div>
         </div>
+        
+        <!-- Nota informativa sobre títulos opcionales -->
+        <div class="note-box" style="margin-top: 1rem; margin-bottom: 0.5rem; background-color: #f0f8ff; border-left-color: #0066cc;">
+          <div class="note-icon">💡</div>
+          <div class="note-content">
+            <strong>Nota:</strong> Si prefieres omitir los títulos de los episodios, quedarán registrados automáticamente en nuestro sistema con el siguiente formato: <em>Nombre de la Obra - T01E001</em>
+          </div>
+        </div>
+        
         <div class="tabla-episodios-container" style="display: none;">
           <div class="episodios-individuales">
             <!-- Los episodios se generarán aquí dinámicamente -->
@@ -2716,22 +3834,50 @@ function agregarBloqueEpisodios() {
         </div>
       </div>
       
-      <!-- Subbloque 2: Títulos de episodios -->
+      <!-- Subbloque 2: Líneas de participación (MOVIDO ANTES DE TÍTULOS) -->
       <div class="subbloque">
-        <h4>Títulos de episodios</h4>
+        <h4>Líneas de participación <span style="color: #dc3545;">*</span></h4>
+        
+        <!-- Nota informativa sobre participaciones -->
+        <div class="note-box" style="margin-bottom: 1rem;">
+          <div class="note-icon">ℹ️</div>
+          <div class="note-content">
+            Registra los derechohabientes de la obra y sus participaciones. Puedes agregar varias líneas de participación. Considera que la suma de los porcentajes de participación por rol no puede superar el 100%.
+          </div>
+        </div>
+        
+        <!-- Nota de indicaciones importantes -->
+        <div class="note-box" style="margin-bottom: 1rem; background-color: #f8f9fa; border-left-color: #097137;">
+          <div class="note-icon">📋</div>
+          <div class="note-content">
+            <strong>Indicaciones importantes:</strong>
+            <ol style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+              <li style="margin-bottom: 0.3rem;">Si el autor no aparece en el listado igualmente se puede registrar su nombre y participación.</li>
+              <li>Las participaciones con decimal se deben registrar con punto, por ejemplo 30.5</li>
+            </ol>
+          </div>
+        </div>
+        
+        <button type="button" class="btn btn-outline-success btn-gestionar-participaciones" style="margin-top:10px;" data-bloque-id="${contadorBloquesEpisodios}">
+          <i class="fas fa-table"></i> Registrar participaciones del intervalo
+        </button>
+      </div>
+      
+      <!-- Subbloque 3: Títulos extranjeros/traducidos (MOVIDO DESPUÉS DE PARTICIPACIONES) -->
+      <div class="subbloque">
+        <h4>Títulos extranjeros/traducidos de los episodios (opcional)</h4>
         <div class="episodios-titulos">
           <!-- Los títulos de episodios se generarán aquí -->
         </div>
         <button type="button" class="btn btn-outline-success btn-gestionar-titulos" style="margin-top:10px;" data-bloque-id="${contadorBloquesEpisodios}">
-          <i class="fas fa-table"></i> Gestionar Otros Títulos
+          <i class="fas fa-table"></i> Registrar otros títulos
         </button>
       </div>
       
-      <!-- Subbloque 3: Líneas de participación -->
-      <div class="subbloque">
-        <h4>Líneas de participación</h4>
-        <button type="button" class="btn btn-outline-success btn-gestionar-participaciones" style="margin-top:10px;" data-bloque-id="${contadorBloquesEpisodios}">
-          <i class="fas fa-table"></i> Gestionar participaciones
+      <!-- Botón para agregar otro intervalo (al final del bloque) -->
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e0e0e0;">
+        <button type="button" class="btn btn-primary btn-agregar-otro-intervalo" data-bloque-id="${contadorBloquesEpisodios}">
+          <i class="fas fa-plus"></i> Agregar otro intervalo de episodios
         </button>
       </div>
     </div>
@@ -2763,6 +3909,20 @@ function agregarBloqueEpisodios() {
   setTimeout(() => {
     nuevoBloque.classList.remove('bloque-episodios-entering');
   }, 300);
+
+  // Agregar event listener para el botón "+ Agregar otro intervalo"
+  const btnAgregarOtroIntervalo = bloqueColapsable.querySelector('.btn-agregar-otro-intervalo');
+  if (btnAgregarOtroIntervalo) {
+    btnAgregarOtroIntervalo.addEventListener('click', function () {
+      agregarBloqueEpisodios();
+    });
+  }
+
+  // Ocultar el botón inicial "+ Agregar Bloque de Episodios" después de crear el primer bloque
+  const btnInicial = document.getElementById('addBloqueEpisodios');
+  if (btnInicial) {
+    btnInicial.style.display = 'none';
+  }
 
   // Forzar los campos a vacío para evitar que el navegador muestre 0 por defecto
   const desdeInput = nuevoBloque.querySelector('.desde-episodio');
@@ -2857,6 +4017,20 @@ function agregarBloqueEpisodios() {
 
   // Generar tabla automáticamente al crear el bloque (después de configurar eventos)
   generarTablaEpisodios(contadorBloquesEpisodios);
+
+  const todosBloques = document.querySelectorAll('.bloque-episodios-colapsable');
+  todosBloques.forEach((bloque, index) => {
+    const btnEliminar = bloque.querySelector('.btn-eliminar');
+    if (btnEliminar) {
+      if (index === 0) {
+        btnEliminar.style.display = 'none';
+        btnEliminar.disabled = true;
+      } else {
+        btnEliminar.style.display = '';
+        btnEliminar.disabled = false;
+      }
+    }
+  });
 
   // Evento para botón importar títulos
   const btnImportar = nuevoBloque.querySelector('.btn-importar-titulos');
@@ -2957,6 +4131,51 @@ function configurarEventosBloqueEpisodios(bloqueId) {
   // Eventos para campos de intervalo (ya agregados en agregarBloqueEpisodios)
 }
 
+// Tabla resumen de participaciones por bloque (global)
+function mostrarTablaResumenParticipaciones(bloqueId) {
+  const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
+  if (!bloque) return;
+
+  const participaciones = participacionesPorBloque[bloqueId] || [];
+  if (!Array.isArray(participaciones) || participaciones.length === 0) return;
+
+  const subbloqueParticipaciones = Array.from(bloque.querySelectorAll('.subbloque'))
+    .find(sb => sb.querySelector('h4')?.textContent.includes('Líneas de participación'));
+  if (!subbloqueParticipaciones) return;
+
+  const tablaAnterior = subbloqueParticipaciones.querySelector('.tabla-resumen-participaciones');
+  if (tablaAnterior) tablaAnterior.remove();
+
+  const tablaHTML = `
+    <div class="tabla-resumen-participaciones" style="margin-top: 1rem;">
+      <h5 style="color: #097137; margin-bottom: 0.5rem;">Participaciones Registradas:</h5>
+      <table style="width: 100%; border-collapse: collapse; background: white; border: 1px solid #dee2e6;">
+        <thead>
+          <tr style="background: #f8f9fa;">
+            <th style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: left;">Rol</th>
+            <th style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: left;">Autor</th>
+            <th style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: right;">Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${participaciones.map(p => `
+            <tr>
+              <td style="padding: 0.5rem; border: 1px solid #dee2e6;">${p.rol}</td>
+              <td style="padding: 0.5rem; border: 1px solid #dee2e6;">${p.autor}</td>
+              <td style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: right;">${p.porcentaje}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  const botonRegistrar = subbloqueParticipaciones.querySelector('.btn-gestionar-participaciones');
+  if (botonRegistrar) {
+    botonRegistrar.insertAdjacentHTML('beforebegin', tablaHTML);
+  }
+}
+
 // Función para eliminar un bloque de episodios
 function eliminarBloqueEpisodios(bloqueId) {
   const bloqueColapsable = document.getElementById(`bloque-episodios-colapsable-${bloqueId}`);
@@ -2988,6 +4207,20 @@ function eliminarBloqueEpisodios(bloqueId) {
         // Actualizar el contador al número de bloques restantes
         contadorBloquesEpisodios = bloquesRestantes.length;
       }
+
+      const todosBloques = document.querySelectorAll('.bloque-episodios-colapsable');
+      todosBloques.forEach((bloque, index) => {
+        const btnEliminar = bloque.querySelector('.btn-eliminar');
+        if (btnEliminar) {
+          if (index === 0) {
+            btnEliminar.style.display = 'none';
+            btnEliminar.disabled = true;
+          } else {
+            btnEliminar.style.display = '';
+            btnEliminar.disabled = false;
+          }
+        }
+      });
     }, 300);
   }
 }
@@ -3033,43 +4266,37 @@ function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
     episodiosContainer.innerHTML = '';
     return;
   }
+
+  // Crear estructura simplificada sin contenedores colapsables
   episodiosContainer.innerHTML = `
     <div class="intervalo-header">
       <h4>Episodios ${desde} - ${hasta}</h4>
-      <button type="button" class="btn-toggle-intervalo">
-        <i class="fas fa-chevron-down"></i>
-      </button>
     </div>
-    <div class="intervalo-content">
-      <div class="episodios-list"></div>
+    <div class="intervalo-content" style="display: block;">
+      <div class="episodios-list-simple"></div>
     </div>
   `;
 
-  const episodiosList = episodiosContainer.querySelector('.episodios-list');
+  const episodiosList = episodiosContainer.querySelector('.episodios-list-simple');
 
   console.log(`Generando episodios desde ${desde} hasta ${hasta}`);
   console.log('episodiosList encontrado:', episodiosList);
 
+  // Generar inputs editables directamente para cada episodio
   for (let i = desde; i <= hasta; i++) {
     console.log(`Creando episodio ${i}`);
     const episodioHTML = `
-      <div class="episodio-item" data-episodio="${i}">
-        <div class="episodio-header" data-episodio="${i}">
-          <div class="episodio-header-content">
-            <span class="episodio-numero">Episodio ${i}</span>
-            <span class="episodio-titulo-preview">Sin título</span>
-          </div>
-          <button type="button" class="btn-toggle-episodio" data-episodio="${i}">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-        </div>
-        
-        <div class="episodio-content collapsed" data-episodio="${i}">
-          <div class="form-group">
-            <label>Título del episodio ${i}</label>
-            <input type="text" class="titulo-episodio" id="titulo-${bloqueId}-${i}" data-episodio="${i}" placeholder="Título del episodio ${i}">
-          </div>
-        </div>
+      <div class="episodio-item-simple" data-episodio="${i}">
+        <label for="titulo-${bloqueId}-${i}" class="episodio-label">
+          <span class="episodio-numero">Episodio ${i}:</span>
+        </label>
+        <input 
+          type="text" 
+          class="titulo-episodio-inline" 
+          id="titulo-${bloqueId}-${i}" 
+          data-episodio="${i}" 
+          placeholder="Escribe el título del episodio ${i}"
+        >
       </div>
     `;
 
@@ -3077,24 +4304,7 @@ function generarEpisodiosIndividuales(bloqueId, desde, hasta) {
     console.log(`Episodio ${i} insertado. Total episodios en lista:`, episodiosList.children.length);
   }
 
-  // Configurar el toggle del intervalo
-  const intervaloHeader = episodiosContainer.querySelector('.intervalo-header');
-  const intervaloContent = episodiosContainer.querySelector('.intervalo-content');
-  const intervaloToggleBtn = episodiosContainer.querySelector('.btn-toggle-intervalo');
-
-  if (intervaloHeader && intervaloContent && intervaloToggleBtn) {
-    intervaloHeader.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-toggle-intervalo')) return;
-      toggleIntervaloContent(intervaloContent, intervaloToggleBtn);
-    });
-
-    intervaloToggleBtn.addEventListener('click', () => {
-      toggleIntervaloContent(intervaloContent, intervaloToggleBtn);
-    });
-  }
-
-  // Configurar eventos de los episodios
-  configurarEventosEpisodios(bloqueId);
+  // No necesitamos configurar eventos de toggle ya que no hay contenedores colapsables
 }
 
 // Función para configurar eventos de episodios
@@ -3526,6 +4736,12 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Abriendo modal de participaciones para bloque:', bloqueActualModal);
       restaurarParticipacionesModal();
       document.getElementById('modalParticipaciones').style.display = 'flex';
+
+      // Agregar automáticamente la primera línea de participación si el modal está vacío
+      const tbody = document.querySelector('#modalParticipaciones .tabla-participaciones tbody');
+      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+        agregarFilaParticipacionModal();
+      }
     }
     // Cerrar modal de gestionar participaciones
     if (e.target.closest('.btn-cerrar-participaciones')) {
@@ -3559,6 +4775,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (bloqueActualModal) {
         participacionesPorBloque[bloqueActualModal] = [...participacionesModal];
         console.log('Participaciones guardadas para bloque', bloqueActualModal, ':', participacionesPorBloque[bloqueActualModal]);
+
+        // Mostrar tabla resumen en el bloque
+        mostrarTablaResumenParticipaciones(bloqueActualModal);
       }
 
       document.getElementById('modalParticipaciones').style.display = 'none';
@@ -3585,7 +4804,7 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       }
     }
-    
+
     // Mostrar resumen dinámico en tiempo real
     const resumenModalDiv = document.getElementById('participacion-resumen-modal');
     if (resumenModalDiv) {
@@ -3595,12 +4814,64 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="${esValido ? 'ok' : 'error'}">Total ${rol}: ${total.toFixed(2)}% ${esValido ? '✅' : '❌'}</span>`;
       }).join(' ');
     }
-    
+
     const errorElement = document.getElementById('participaciones-modal-error');
     if (errorElement) {
       errorElement.textContent = error;
     }
     return !error;
+  }
+
+  // Función para mostrar tabla resumen de participaciones en el bloque
+  function mostrarTablaResumenParticipaciones(bloqueId) {
+    const bloque = document.getElementById(`bloque-episodios-${bloqueId}`);
+    if (!bloque) return;
+
+    const participaciones = participacionesPorBloque[bloqueId] || [];
+    if (participaciones.length === 0) return;
+
+    // Buscar el subbloque de participaciones
+    const subbloqueParticipaciones = Array.from(bloque.querySelectorAll('.subbloque'))
+      .find(sb => sb.querySelector('h4')?.textContent.includes('Líneas de participación'));
+
+    if (!subbloqueParticipaciones) return;
+
+    // Eliminar tabla resumen anterior si existe
+    const tablaAnterior = subbloqueParticipaciones.querySelector('.tabla-resumen-participaciones');
+    if (tablaAnterior) {
+      tablaAnterior.remove();
+    }
+
+    // Crear tabla resumen
+    const tablaHTML = `
+      <div class="tabla-resumen-participaciones" style="margin-top: 1rem;">
+        <h5 style="color: #097137; margin-bottom: 0.5rem;">Participaciones Registradas:</h5>
+        <table style="width: 100%; border-collapse: collapse; background: white; border: 1px solid #dee2e6;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: left;">Rol</th>
+              <th style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: left;">Autor</th>
+              <th style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: right;">Porcentaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${participaciones.map(p => `
+              <tr>
+                <td style="padding: 0.5rem; border: 1px solid #dee2e6;">${p.rol}</td>
+                <td style="padding: 0.5rem; border: 1px solid #dee2e6;">${p.autor}</td>
+                <td style="padding: 0.5rem; border: 1px solid #dee2e6; text-align: right;">${p.porcentaje}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Insertar tabla antes del botón "Registrar participaciones"
+    const botonRegistrar = subbloqueParticipaciones.querySelector('.btn-gestionar-participaciones');
+    if (botonRegistrar) {
+      botonRegistrar.insertAdjacentHTML('beforebegin', tablaHTML);
+    }
   }
 
   // Función para restaurar las participaciones en el modal
@@ -3648,9 +4919,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Inicializar opciones y valores
         Promise.all([
-          fetch('assets/rol.json').then(r => r.json()),
-          fetch('assets/socios.json').then(r => r.json())
-        ]).then(([roles, autores]) => {
+          fetch('assets/rol.json').then(r => r.json())
+        ]).then(([roles]) => {
           const rolSelect = tr.querySelector('.rol-modal-participacion');
           rolSelect.innerHTML = '<option value="">Seleccione...</option>' + roles.map(r => `<option value="${r.Rol}">${r.Rol}</option>`).join('');
           rolSelect.value = part.rol || '';
@@ -3667,7 +4937,7 @@ document.addEventListener('DOMContentLoaded', () => {
               minimumInputLength: 2,
               ajax: {
                 transport: function (params, success, failure) {
-                  fetchJSON('socios.json').then(sociosRaw => {
+                  AppSecurity.loadData().then(sociosRaw => {
                     const term = params.data.q ? params.data.q.toLowerCase() : '';
                     const autores = sociosRaw
                       .map(a => a["Nombre completo"])
@@ -3721,9 +4991,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obtener roles y autores desde los JSON
     Promise.all([
-      fetch('assets/rol.json').then(r => r.json()),
-      fetch('assets/socios.json').then(r => r.json())
-    ]).then(([roles, autores]) => {
+      fetch('assets/rol.json').then(r => r.json())
+    ]).then(([roles]) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
       <td>
@@ -3756,10 +5025,11 @@ document.addEventListener('DOMContentLoaded', () => {
           width: '100%',
           allowClear: true,
           tags: true,
+          selectOnClose: true, // Permite escribir directamente y guardar al hacer clic fuera
           minimumInputLength: 2,
           ajax: {
             transport: function (params, success, failure) {
-              fetchJSON('socios.json').then(sociosRaw => {
+              AppSecurity.loadData().then(sociosRaw => {
                 const term = params.data.q ? params.data.q.toLowerCase() : '';
                 const autoresData = sociosRaw
                   .filter(socio => socio["Nombre completo"] && socio["Nombre completo"].toLowerCase().includes(term))
@@ -3801,6 +5071,17 @@ document.addEventListener('DOMContentLoaded', () => {
               return 'No se encontró el autor. Puede crear uno nuevo.';
             }
           }
+        });
+
+        // Enfocar automáticamente el campo de búsqueda al abrir el Select2
+        $(autorSelect).on('select2:open', function () {
+          setTimeout(function () {
+            // Buscar el campo de búsqueda dentro del dropdown abierto
+            const searchField = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchField) {
+              searchField.focus();
+            }
+          }, 100); // Aumentar timeout para asegurar que el DOM esté listo
         });
       }
     });
@@ -4089,6 +5370,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('prev-btn').addEventListener('click', async () => {
+    if (currentStep === 4) {
+      const radioNo = document.getElementById('radio-participaciones-no');
+      const radioSi = document.getElementById('radio-participaciones-si');
+      if (radioNo && radioNo.checked) {
+        formData.mismasParticipaciones = 'no';
+        saveEpisodiosData();
+      } else if (radioSi && radioSi.checked) {
+        await saveParticipacionesInlineData();
+      }
+    }
     if (currentStep > 0) await showStep(currentStep - 1);
   });
   document.getElementById('next-btn').addEventListener('click', async () => {
@@ -4123,6 +5414,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       if (esSerializada) {
         console.log('Obra serializada - omitiendo validación de participaciones');
+      }
+    }
+
+    if (currentStep === 4) {
+      const radioSi = document.getElementById('radio-participaciones-si');
+      const radioNo = document.getElementById('radio-participaciones-no');
+      if (radioSi && radioSi.checked) {
+        await saveParticipacionesInlineData();
+      } else if (radioNo && radioNo.checked) {
+        formData.mismasParticipaciones = 'no';
+        saveEpisodiosData();
       }
     }
 
@@ -4551,3 +5853,136 @@ function setupRutFormatting() {
 // Hacer la función disponible globalmente para el onclick en HTML
 window.removeSignatureFile = removeSignatureFile;
 
+// Función para actualizar dinámicamente la lista de participantes en el paso de Firma
+function actualizarListaParticipantes() {
+  console.log('=== ACTUALIZANDO LISTA DE PARTICIPANTES ===');
+  console.log('formData:', formData);
+
+  // Recopilar todos los participantes únicos de participaciones y episodios
+  const participantesMap = new Map();
+
+  // Recopilar de participaciones principales
+  if (formData.participaciones && Array.isArray(formData.participaciones)) {
+    formData.participaciones.forEach(p => {
+      if (p.autor && p.autor.trim() !== '') {
+        if (!participantesMap.has(p.autor)) {
+          participantesMap.set(p.autor, {
+            nombre: p.autor,
+            correo: p.correo || '',
+            tieneCorreo: !!(p.correo && p.correo.trim() !== '')
+          });
+        }
+      }
+    });
+  }
+
+  // Recopilar de episodios
+  if (formData.stepEpisodios && Array.isArray(formData.stepEpisodios)) {
+    formData.stepEpisodios.forEach(episodio => {
+      if (episodio.participaciones && Array.isArray(episodio.participaciones)) {
+        episodio.participaciones.forEach(p => {
+          if (p.autor && p.autor.trim() !== '') {
+            if (!participantesMap.has(p.autor)) {
+              participantesMap.set(p.autor, {
+                nombre: p.autor,
+                correo: p.correo || '',
+                tieneCorreo: !!(p.correo && p.correo.trim() !== '')
+              });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  const participantes = Array.from(participantesMap.values());
+  const participantesSinCorreo = participantes.filter(p => !p.tieneCorreo);
+
+  console.log('Total participantes:', participantes.length);
+  console.log('Participantes sin correo:', participantesSinCorreo.length);
+  console.log('Participantes:', participantes);
+
+  // Actualizar mensaje de alerta
+  const alertaDiv = document.getElementById('alerta-correos-faltantes');
+  console.log('alertaDiv encontrado:', !!alertaDiv);
+  if (alertaDiv) {
+    if (participantesSinCorreo.length > 0) {
+      alertaDiv.innerHTML = `Se encontraron <strong>${participantesSinCorreo.length}</strong> participante(s) sin correo electrónico (pueden no ser socios de ATN). Si tienes sus correos los puedes registrar en este apartado, si no se recomienda notificarlos manualmente mientras se actualizan los datos en ATN.`;
+      alertaDiv.style.display = 'block';
+    } else {
+      alertaDiv.style.display = 'none';
+    }
+  }
+
+  // Actualizar lista de participantes
+  const listaUl = document.querySelector('.lista-participantes-notificacion');
+  console.log('listaUl encontrado:', !!listaUl);
+  if (listaUl) {
+    if (participantes.length === 0) {
+      listaUl.innerHTML = '<li>No hay participantes para notificar</li>';
+    } else {
+      console.log('Generando HTML para', participantes.length, 'participantes');
+      listaUl.innerHTML = participantes.map(p => {
+        if (p.tieneCorreo) {
+          // Participante con correo: mostrar "Se encontró correo" en verde
+          return `
+            <li class="participante-item">
+              <span class="participante-nombre">${p.nombre}</span>
+              <span class="participante-correo-encontrado" style="color: #28a745; font-weight: 500;">
+                ✓ Se encontró correo
+              </span>
+            </li>
+          `;
+        } else {
+          // Participante sin correo: mostrar campo opcional para agregar correo
+          return `
+            <li class="participante-item">
+              <span class="participante-nombre">${p.nombre}</span>
+              <span class="participante-sin-correo" style="color: #dc3545;">
+                ✗ No se encontró correo
+              </span>
+              <div class="campo-correo-opcional" style="margin-top: 0.5rem;">
+                <input 
+                  type="email" 
+                  class="form-control correo-adicional-input" 
+                  data-autor="${p.nombre}"
+                  placeholder="Agregar correo (opcional)"
+                  style="max-width: 300px; font-size: 0.9rem;"
+                >
+              </div>
+            </li>
+          `;
+        }
+      }).join('');
+
+      // Agregar event listeners a los campos de correo opcionales
+      const correosInputs = listaUl.querySelectorAll('.correo-adicional-input');
+      correosInputs.forEach(input => {
+        input.addEventListener('change', function () {
+          const autor = this.getAttribute('data-autor');
+          const correo = this.value.trim();
+
+          console.log(`Correo agregado para ${autor}: ${correo}`);
+
+          // Actualizar el correo en el participante correspondiente
+          const participante = participantesMap.get(autor);
+          if (participante && correo !== '') {
+            participante.correo = correo;
+            participante.tieneCorreo = true;
+
+            // Guardar en formData para que se envíe en el fetch
+            if (!formData.correosAdicionales) {
+              formData.correosAdicionales = {};
+            }
+            formData.correosAdicionales[autor] = correo;
+
+            console.log('Correos adicionales guardados:', formData.correosAdicionales);
+          }
+        });
+      });
+    }
+  }
+}
+
+// Hacer la función disponible globalmente
+window.actualizarListaParticipantes = actualizarListaParticipantes;
