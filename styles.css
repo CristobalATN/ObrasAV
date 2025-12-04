@@ -115,9 +115,13 @@
   display: none;
   position: fixed;
   z-index: 9999;
-  left: 0; top: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.18);
-  align-items: center; justify-content: center;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18);
+  align-items: center;
+  justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
@@ -129,7 +133,7 @@
 #modalParticipaciones .modal-atn-content {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 6px 32px rgba(9,113,55,0.13);
+  box-shadow: 0 6px 32px rgba(9, 113, 55, 0.13);
   max-width: 900px;
   width: 98vw;
   margin: 0 auto;
@@ -148,9 +152,11 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
+
 #modalParticipaciones .btn-guardar-participaciones:hover {
   background: #0bbd6b;
 }
+
 #modalParticipaciones .btn-cerrar-participaciones {
   background: #fff;
   color: #097137;
@@ -162,10 +168,12 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
+
 #modalParticipaciones .btn-cerrar-participaciones:hover {
   background: #f5f8f6;
   color: #0bbd6b;
 }
+
 #modalParticipaciones .modal-atn-header-green {
   background: #097137;
   border-radius: 18px 18px 0 0;
@@ -176,25 +184,29 @@
   letter-spacing: 0.5px;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 #modalParticipaciones .modal-atn-header-green h3 {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 600;
 }
+
 #modalParticipaciones .modal-atn-body {
   padding: 32px 36px 0 36px;
   background: #fff;
   max-height: 60vh;
   overflow-y: auto;
 }
+
 .tabla-participaciones-container {
   width: 100%;
   overflow-x: auto;
   margin-bottom: 18px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   max-height: 50vh;
 }
+
 .tabla-participaciones {
   min-width: 700px;
   width: 100%;
@@ -202,6 +214,7 @@
   border-spacing: 0 10px;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 .tabla-participaciones th {
   background: #f5f8f6;
   color: #097137;
@@ -214,10 +227,27 @@
   white-space: nowrap;
   min-width: 150px;
 }
-.tabla-participaciones th:nth-child(1) { min-width: 180px; } /* Rol */
-.tabla-participaciones th:nth-child(2) { min-width: 200px; } /* Autor */
-.tabla-participaciones th:nth-child(3) { min-width: 120px; } /* Porcentaje */
-.tabla-participaciones th:nth-child(4) { min-width: 100px; } /* Eliminar */
+
+.tabla-participaciones th:nth-child(1) {
+  min-width: 180px;
+}
+
+/* Rol */
+.tabla-participaciones th:nth-child(2) {
+  min-width: 200px;
+}
+
+/* Autor */
+.tabla-participaciones th:nth-child(3) {
+  min-width: 120px;
+}
+
+/* Porcentaje */
+.tabla-participaciones th:nth-child(4) {
+  min-width: 100px;
+}
+
+/* Eliminar */
 .tabla-participaciones td {
   background: #fff;
   padding: 12px 16px;
@@ -225,10 +255,24 @@
   vertical-align: middle;
   border-radius: 8px;
 }
-.tabla-participaciones td:nth-child(1) { min-width: 180px; }
-.tabla-participaciones td:nth-child(2) { min-width: 200px; }
-.tabla-participaciones td:nth-child(3) { min-width: 120px; }
-.tabla-participaciones td:nth-child(4) { min-width: 100px; text-align: center; }
+
+.tabla-participaciones td:nth-child(1) {
+  min-width: 180px;
+}
+
+.tabla-participaciones td:nth-child(2) {
+  min-width: 200px;
+}
+
+.tabla-participaciones td:nth-child(3) {
+  min-width: 120px;
+}
+
+.tabla-participaciones td:nth-child(4) {
+  min-width: 100px;
+  text-align: center;
+}
+
 .tabla-participaciones input[type="number"],
 .tabla-participaciones select {
   width: 250px;
@@ -244,11 +288,13 @@
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
+
 .tabla-participaciones input[type="number"]:focus,
 .tabla-participaciones select:focus {
   border-color: #097137;
   background: #fff;
 }
+
 .tabla-participaciones .btn-eliminar-participacion {
   background: #fff;
   color: #dc3545;
@@ -261,10 +307,12 @@
   font-family: 'Segoe UI', Arial, sans-serif;
   transform: scale(1);
 }
+
 .tabla-participaciones .btn-eliminar-participacion:hover {
   background: #dc3545;
   color: #fff;
 }
+
 /* Animaciones para filas de participaciones */
 .tabla-participaciones tbody tr {
   opacity: 0;
@@ -277,6 +325,7 @@
   transform: translateY(0);
   animation: slideOutRow 0.3s ease-in forwards;
 }
+
 .btn-agregar-participacion {
   display: flex;
   align-items: center;
@@ -290,28 +339,34 @@
   font-weight: 600;
   margin: 0 auto 0 0;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(9,113,55,0.07);
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.07);
   transition: background 0.18s, color 0.18s;
 }
+
 .btn-agregar-participacion:hover {
   background: #0bbd6b;
   color: #fff;
 }
+
 .tabla-participaciones .btn-eliminar-participacion:hover {
   background: #dc3545;
   color: #fff;
 }
+
 @media (max-width: 700px) {
   #modalParticipaciones .modal-atn-content {
     padding: 0 0 16px 0;
   }
+
   #modalParticipaciones .modal-atn-header-green,
   #modalParticipaciones .modal-atn-body,
   #modalParticipaciones .modal-atn-buttons {
     padding-left: 10px;
     padding-right: 10px;
   }
-  .tabla-participaciones th, .tabla-participaciones td {
+
+  .tabla-participaciones th,
+  .tabla-participaciones td {
     padding: 8px 4px;
     font-size: 0.95rem;
   }
@@ -323,8 +378,9 @@
   overflow-x: auto;
   margin-bottom: 18px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
 .tabla-exhibiciones {
   min-width: 800px;
   width: 100%;
@@ -332,6 +388,7 @@
   border-spacing: 0 10px;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 .tabla-exhibiciones th {
   background: #f5f8f6;
   color: #097137;
@@ -344,11 +401,32 @@
   white-space: nowrap;
   min-width: 150px;
 }
-.tabla-exhibiciones th:nth-child(1) { min-width: 200px; } /* Otro título */
-.tabla-exhibiciones th:nth-child(2) { min-width: 150px; } /* Idioma */
-.tabla-exhibiciones th:nth-child(3) { min-width: 180px; } /* País */
-.tabla-exhibiciones th:nth-child(4) { min-width: 220px; } /* Canal */
-.tabla-exhibiciones th:nth-child(5) { min-width: 100px; } /* Eliminar */
+
+.tabla-exhibiciones th:nth-child(1) {
+  min-width: 200px;
+}
+
+/* Otro título */
+.tabla-exhibiciones th:nth-child(2) {
+  min-width: 150px;
+}
+
+/* Idioma */
+.tabla-exhibiciones th:nth-child(3) {
+  min-width: 180px;
+}
+
+/* País */
+.tabla-exhibiciones th:nth-child(4) {
+  min-width: 220px;
+}
+
+/* Canal */
+.tabla-exhibiciones th:nth-child(5) {
+  min-width: 100px;
+}
+
+/* Eliminar */
 .tabla-exhibiciones td {
   background: #fff;
   padding: 12px 16px;
@@ -356,11 +434,28 @@
   vertical-align: middle;
   border-radius: 8px;
 }
-.tabla-exhibiciones td:nth-child(1) { min-width: 200px; }
-.tabla-exhibiciones td:nth-child(2) { min-width: 150px; }
-.tabla-exhibiciones td:nth-child(3) { min-width: 180px; }
-.tabla-exhibiciones td:nth-child(4) { min-width: 220px; }
-.tabla-exhibiciones td:nth-child(5) { min-width: 100px; text-align: center; }
+
+.tabla-exhibiciones td:nth-child(1) {
+  min-width: 200px;
+}
+
+.tabla-exhibiciones td:nth-child(2) {
+  min-width: 150px;
+}
+
+.tabla-exhibiciones td:nth-child(3) {
+  min-width: 180px;
+}
+
+.tabla-exhibiciones td:nth-child(4) {
+  min-width: 220px;
+}
+
+.tabla-exhibiciones td:nth-child(5) {
+  min-width: 100px;
+  text-align: center;
+}
+
 .tabla-exhibiciones input[type="text"],
 .tabla-exhibiciones select {
   width: 250px;
@@ -376,11 +471,13 @@
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
+
 .tabla-exhibiciones input[type="text"]:focus,
 .tabla-exhibiciones select:focus {
   border-color: #097137;
   background: #fff;
 }
+
 .tabla-exhibiciones .btn-eliminar-exhibicion {
   background: #fff;
   color: #dc3545;
@@ -392,10 +489,12 @@
   transition: background 0.18s, color 0.18s;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 .tabla-exhibiciones .btn-eliminar-exhibicion:hover {
   background: #dc3545;
   color: #fff;
 }
+
 .btn-agregar-exhibicion {
   display: flex;
   align-items: center;
@@ -409,13 +508,15 @@
   font-weight: 600;
   margin: 0 auto 0 0;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(9,113,55,0.07);
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.07);
   transition: background 0.18s, color 0.18s;
 }
+
 .btn-agregar-exhibicion:hover {
   background: #0bbd6b;
   color: #fff;
 }
+
 /* Animaciones para filas de exhibiciones */
 .tabla-exhibiciones tbody tr {
   opacity: 0;
@@ -434,6 +535,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -446,6 +548,7 @@
     transform: translateY(0);
     max-height: 60px;
   }
+
   to {
     opacity: 0;
     transform: translateY(-10px);
@@ -489,7 +592,7 @@
   font-weight: 600;
   margin: 0 auto 0 0;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(9,113,55,0.07);
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.07);
   transition: all 0.2s ease;
   transform: scale(1);
 }
@@ -498,7 +601,7 @@
   background: #0bbd6b;
   color: #fff;
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(9,113,55,0.15);
+  box-shadow: 0 4px 12px rgba(9, 113, 55, 0.15);
 }
 
 .btn-agregar-exhibicion:active {
@@ -506,15 +609,17 @@
 }
 
 @media (max-width: 700px) {
-  .tabla-exhibiciones th, .tabla-exhibiciones td {
+
+  .tabla-exhibiciones th,
+  .tabla-exhibiciones td {
     padding: 8px 4px;
     font-size: 0.95rem;
   }
-  
+
   .tabla-exhibiciones .btn-eliminar-exhibicion:hover {
     transform: none;
   }
-  
+
   .btn-agregar-exhibicion:hover {
     transform: none;
   }
@@ -524,6 +629,13 @@
 :root {
   --transition-duration: 0.4s;
   --easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Clase para ocultar pasos dinámicamente */
+.step-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 body {
@@ -537,8 +649,8 @@ body {
 
 /* Animación de transición entre pasos */
 .wizard-step {
-  transition: opacity var(--transition-duration) var(--easing), 
-              transform var(--transition-duration) var(--easing);
+  transition: opacity var(--transition-duration) var(--easing),
+    transform var(--transition-duration) var(--easing);
   opacity: 0;
   transform: translateY(20px);
   position: absolute;
@@ -557,7 +669,8 @@ body {
 /* Contenedor principal para manejar la altura durante las transiciones */
 .wizard-container {
   position: relative;
-  min-height: 300px; /* Ajusta según sea necesario */
+  min-height: 300px;
+  /* Ajusta según sea necesario */
   overflow: hidden;
 }
 
@@ -592,9 +705,26 @@ body {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .header {
@@ -606,6 +736,7 @@ body {
   padding: 1.5rem 2rem 1rem 2rem;
   justify-content: center;
 }
+
 .logo {
   position: absolute;
   left: 2rem;
@@ -614,6 +745,7 @@ body {
   height: 60px;
   width: auto;
 }
+
 .header h1 {
   color: #097137;
   font-size: 2.5rem;
@@ -623,19 +755,22 @@ body {
   width: 100%;
   font-weight: 700;
 }
+
 h1 {
   color: #097137;
   font-size: 2rem;
   margin: 0;
 }
+
 main {
-  max-width: 700px;
+  max-width: 1000px;
   margin: 2rem auto;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(9,113,55,0.07);
+  box-shadow: 0 2px 16px rgba(9, 113, 55, 0.07);
   padding: 2rem 2.5rem 2.5rem 2.5rem;
 }
+
 /* Estilos para el carrusel de progreso */
 .progress-container {
   width: 100%;
@@ -781,16 +916,20 @@ main {
   .progress-container {
     padding: 0 30px;
   }
+
   .progress-slide {
     min-width: 70px;
   }
+
   .step-label {
     font-size: 0.65rem;
   }
 }
+
 .wizard-step {
   display: none;
 }
+
 .wizard-step.active {
   display: block;
 }
@@ -824,15 +963,18 @@ main {
   color: #2c3e50;
   font-weight: 600;
 }
+
 .form-group {
   margin-bottom: 1.5rem;
 }
+
 .form-group label {
   display: block;
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: #097137;
 }
+
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -846,17 +988,20 @@ main {
   margin-top: 0.2rem;
   box-sizing: border-box;
 }
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: 2px solid #097137;
   border-color: #097137;
 }
+
 .form-group .input-hint {
   font-size: 0.95rem;
   color: #575656;
   margin-top: 0.2rem;
 }
+
 /* Botones del wizard */
 .wizard-buttons {
   display: flex;
@@ -928,6 +1073,7 @@ main {
 .btn-gestionar-participaciones {
   transition: background 0.18s, color 0.18s;
 }
+
 .btn-gestionar-titulos:hover,
 .btn-gestionar-participaciones:hover {
   background: #0bbd6b;
@@ -963,6 +1109,7 @@ main {
   border: 1.5px solid #097137;
   transition: background 0.18s, color 0.18s;
 }
+
 #prev-btn:hover:enabled {
   background-color: #f8f9fa;
   color: #075a2b;
@@ -977,18 +1124,20 @@ main {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .btn {
     width: 100%;
     min-width: auto;
   }
 }
+
 .form-message {
   margin-top: 2rem;
   font-size: 1.1rem;
   color: #097137;
   text-align: center;
 }
+
 /* Ajuste visual para Select2 para igualar el alto de los inputs */
 .select2-container--default .select2-selection--single,
 .select2-container--default .select2-selection--multiple {
@@ -1002,14 +1151,17 @@ main {
   display: flex;
   align-items: center;
 }
+
 .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: 32px;
 }
+
 .select2-container--default .select2-selection--multiple .select2-selection__rendered {
   min-height: 32px;
   display: flex;
   align-items: center;
 }
+
 .select2-container--default .select2-selection--single:focus,
 .select2-container--default .select2-selection--multiple:focus {
   outline: 2px solid #097137;
@@ -1474,6 +1626,7 @@ main {
   justify-content: space-between;
   margin-bottom: 1rem;
 }
+
 .btn-agregar-linea {
   background: #097137;
   color: #fff;
@@ -1488,10 +1641,12 @@ main {
   transition: background 0.2s, color 0.2s;
   cursor: pointer;
 }
+
 .btn-agregar-linea:hover {
   background: #07582b;
   color: #fff;
 }
+
 .participacion-item {
   background: #f9f9f9;
   border: 1.5px solid #e0e0e0;
@@ -1503,9 +1658,11 @@ main {
   gap: 1rem;
   flex-wrap: wrap;
 }
+
 .participacion-item .form-group {
   margin-bottom: 0;
 }
+
 .participacion-resumen {
   font-size: 1.08rem;
   margin: 0.5rem 0 1rem 0.2rem;
@@ -1513,14 +1670,17 @@ main {
   gap: 1.5rem;
   flex-wrap: wrap;
 }
+
 .participacion-resumen .ok {
   color: #097137;
   font-weight: 600;
 }
+
 .participacion-resumen .error {
   color: #dc3545;
   font-weight: 600;
 }
+
 .btn-eliminar {
   color: #dc3545;
   background: none;
@@ -1532,11 +1692,13 @@ main {
   align-items: center;
   font-weight: 500;
 }
+
 .btn-eliminar span {
   color: #dc3545;
   font-size: 1.5rem;
   margin-right: 4px;
 }
+
 /* Encabezado de aviso institucional */
 .note-box {
   display: flex;
@@ -1548,6 +1710,7 @@ main {
   border-left: 5px solid #097137;
   gap: 1rem;
 }
+
 .note-icon {
   color: #097137;
   font-size: 2.1rem;
@@ -1556,42 +1719,50 @@ main {
   justify-content: center;
   min-width: 2.5rem;
 }
+
 .note-content {
   font-size: 1.08rem;
   color: #575656;
 }
+
 @media (max-width: 900px) {
   main {
     padding: 1rem 0.5rem;
   }
+
   .header {
     flex-direction: column;
     gap: 0.5rem;
     padding: 1rem 0.5rem 0.5rem 0.5rem;
     align-items: center;
   }
+
   .logo {
     position: static;
     transform: none;
     height: 40px;
     margin-bottom: 0.5rem;
   }
+
   .header h1 {
     text-align: center;
     width: 100%;
     font-size: 2rem;
   }
+
   .participacion-item {
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
+
   .participaciones-header {
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
-} 
+}
+
 /* Modal de cancelación */
 .modal-atn {
   display: none;
@@ -1692,8 +1863,13 @@ main {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive para modal */
@@ -1702,30 +1878,47 @@ main {
     margin: 20% auto;
     width: 95%;
   }
-  
+
   .modal-atn-buttons {
     flex-direction: column;
   }
-  
+
   .modal-btn-lg {
     width: 100%;
   }
-} 
+}
+
 .spinner-institucional {
   animation: spinner-rotate 1s linear infinite;
 }
+
 .spinner-institucional .path {
   stroke-linecap: round;
   animation: spinner-dash 1.4s ease-in-out infinite;
 }
+
 @keyframes spinner-rotate {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
+
 @keyframes spinner-dash {
-  0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
-  50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
-  100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
-} 
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
 
 /* Animaciones para bloques dinámicos */
 @keyframes slideInFromTop {
@@ -1734,6 +1927,7 @@ main {
     transform: translateY(-20px);
     max-height: 0;
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1747,6 +1941,7 @@ main {
     transform: translateY(0);
     max-height: 500px;
   }
+
   to {
     opacity: 0;
     transform: translateY(-20px);
@@ -1819,7 +2014,7 @@ main {
 /* Animación para el resumen de participaciones */
 .participacion-resumen {
   animation: slideInFromTop 0.3s ease-out;
-} 
+}
 
 /* Sección bloqueada */
 .section-blocked {
@@ -1872,19 +2067,19 @@ main {
   .section-blocked {
     padding: 40px 15px;
   }
-  
+
   .section-blocked-icon {
     font-size: 3rem;
   }
-  
+
   .section-blocked-title {
     font-size: 1.3rem;
   }
-  
+
   .section-blocked-message {
     font-size: 1rem;
   }
-} 
+}
 
 /* Estilos para bloques de episodios */
 .bloque-episodios {
@@ -2271,7 +2466,7 @@ main {
 .intervalo-content {
   overflow-y: auto;
   max-height: 400px;
-  transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s cubic-bezier(0.4,0,0.2,1);
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
 }
 
@@ -2364,54 +2559,60 @@ main {
     gap: 15px;
     align-items: flex-start;
   }
-  
+
   .subbloque-header {
     flex-direction: column;
     gap: 15px;
     align-items: flex-start;
   }
-  
+
   .episodio-header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .episodio-numero {
     min-width: auto;
   }
-  
+
   .tooltip-content {
     width: 250px;
     left: 0;
     transform: none;
   }
-  
+
   .tooltip-content::after {
     left: 20px;
     transform: none;
   }
-  
+
   .help-tooltip:hover .tooltip-content {
     transform: translateY(-5px);
   }
-} 
-.wizard-section > .section-header > .btn {
+}
+
+.wizard-section>.section-header>.btn {
   margin-bottom: 24px;
 }
 
 /* Si el botón está en un div solo, también aplica */
 .section-header .btn {
   margin-bottom: 24px;
-} 
+}
+
 /* --- MODAL OTROS TÍTULOS POR EPISODIO --- */
 #modalTitulosEpisodio.modal-atn {
   display: none;
   position: fixed;
   z-index: 9999;
-  left: 0; top: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.18);
-  align-items: center; justify-content: center;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18);
+  align-items: center;
+  justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
@@ -2420,16 +2621,20 @@ main {
   display: none;
   position: fixed;
   z-index: 10000;
-  left: 0; top: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.18);
-  align-items: center; justify-content: center;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18);
+  align-items: center;
+  justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 #modalAyudaImportar .modal-atn-content {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 6px 32px rgba(9,113,55,0.13);
+  box-shadow: 0 6px 32px rgba(9, 113, 55, 0.13);
   max-width: 600px;
   width: 98vw;
   margin: 0 auto;
@@ -2511,16 +2716,20 @@ main {
   display: none;
   position: fixed;
   z-index: 10000;
-  left: 0; top: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.18);
-  align-items: center; justify-content: center;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18);
+  align-items: center;
+  justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 #modalPegarTitulosEpisodio .modal-atn-content {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 6px 32px rgba(9,113,55,0.13);
+  box-shadow: 0 6px 32px rgba(9, 113, 55, 0.13);
   max-width: 600px;
   width: 98vw;
   margin: 0 auto;
@@ -2608,21 +2817,27 @@ main {
   display: none;
   position: fixed;
   z-index: 9999;
-  left: 0; top: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.18);
-  align-items: center; justify-content: center;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18);
+  align-items: center;
+  justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 #modalTitulosEpisodio .modal-atn-content {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 6px 32px rgba(9,113,55,0.13);
+  box-shadow: 0 6px 32px rgba(9, 113, 55, 0.13);
   max-width: 900px;
   width: 98vw;
   margin: 0 auto;
   padding: 0 0 24px 0;
   overflow: visible;
 }
+
 #modalTitulosEpisodio .modal-atn-header-green {
   background: #097137;
   border-radius: 18px 18px 0 0;
@@ -2633,12 +2848,14 @@ main {
   letter-spacing: 0.5px;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 #modalTitulosEpisodio .modal-atn-body {
   padding: 32px 36px 0 36px;
   background: #fff;
   max-height: 60vh;
   overflow-y: auto;
 }
+
 .tabla-titulos-episodio {
   width: 100%;
   border-collapse: separate;
@@ -2646,6 +2863,7 @@ main {
   margin-bottom: 18px;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 .tabla-titulos-episodio th {
   background: #f5f8f6;
   color: #097137;
@@ -2656,6 +2874,7 @@ main {
   text-align: left;
   border-radius: 8px 8px 0 0;
 }
+
 .tabla-titulos-episodio td {
   background: #fff;
   padding: 8px 8px;
@@ -2663,6 +2882,7 @@ main {
   vertical-align: middle;
   border-radius: 8px;
 }
+
 .tabla-titulos-episodio input[type="text"],
 .tabla-titulos-episodio select {
   width: 100%;
@@ -2677,11 +2897,13 @@ main {
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
+
 .tabla-titulos-episodio input[type="text"]:focus,
 .tabla-titulos-episodio select:focus {
   border-color: #097137;
   background: #fff;
 }
+
 .tabla-titulos-episodio .btn-eliminar-titulo-episodio {
   background: #fff;
   color: #dc3545;
@@ -2693,10 +2915,12 @@ main {
   transition: background 0.18s, color 0.18s;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 .tabla-titulos-episodio .btn-eliminar-titulo-episodio:hover {
   background: #dc3545;
   color: #fff;
 }
+
 .btn-agregar-titulo-episodio {
   display: flex;
   align-items: center;
@@ -2710,13 +2934,15 @@ main {
   font-weight: 600;
   margin: 0 auto 0 0;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(9,113,55,0.07);
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.07);
   transition: background 0.18s, color 0.18s;
 }
+
 .btn-agregar-titulo-episodio:hover {
   background: #0bbd6b;
   color: #fff;
 }
+
 .btn-agregar-participacion {
   display: flex;
   align-items: center;
@@ -2730,13 +2956,15 @@ main {
   font-weight: 600;
   margin: 0 auto 0 0;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(9,113,55,0.07);
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.07);
   transition: background 0.18s, color 0.18s;
 }
+
 .btn-agregar-participacion:hover {
   background: #0bbd6b;
   color: #fff;
 }
+
 #modalTitulosEpisodio .modal-atn-buttons {
   display: flex;
   justify-content: flex-end;
@@ -2744,6 +2972,7 @@ main {
   padding: 0 36px;
   margin-top: 24px;
 }
+
 #modalTitulosEpisodio .btn-guardar-titulos-episodio {
   background: #097137;
   color: #fff;
@@ -2755,9 +2984,11 @@ main {
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
+
 #modalTitulosEpisodio .btn-guardar-titulos-episodio:hover {
   background: #0bbd6b;
 }
+
 #modalTitulosEpisodio .btn-cerrar-titulos-episodio {
   background: #fff;
   color: #097137;
@@ -2769,6 +3000,7 @@ main {
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
+
 #modalTitulosEpisodio .btn-cerrar-titulos-episodio:hover {
   background: #f5f8f6;
   color: #0bbd6b;
@@ -2778,29 +3010,35 @@ main {
   #modalTitulosEpisodio .modal-atn-content {
     padding: 0 0 16px 0;
   }
+
   #modalTitulosEpisodio .modal-atn-header-green,
   #modalTitulosEpisodio .modal-atn-body,
   #modalTitulosEpisodio .modal-atn-buttons {
     padding-left: 12px;
     padding-right: 12px;
   }
-  .tabla-titulos-episodio th, .tabla-titulos-episodio td {
+
+  .tabla-titulos-episodio th,
+  .tabla-titulos-episodio td {
     font-size: 0.95rem;
     padding: 7px 4px;
   }
 }
+
 /* --- FIN MODAL OTROS TÍTULOS POR EPISODIO --- */
-.wizard-section > .section-header > .btn {
+.wizard-section>.section-header>.btn {
   margin-bottom: 24px;
 }
 
 /* Si el botón está en un div solo, también aplica */
 .section-header .btn {
   margin-bottom: 24px;
-} 
+}
+
 .wizard-step {
   display: none;
 }
+
 .wizard-step.active {
   display: block;
 }
@@ -2834,15 +3072,18 @@ main {
   color: #2c3e50;
   font-weight: 600;
 }
+
 .form-group {
   margin-bottom: 1.5rem;
 }
+
 .form-group label {
   display: block;
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: #097137;
 }
+
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -2856,17 +3097,20 @@ main {
   margin-top: 0.2rem;
   box-sizing: border-box;
 }
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: 2px solid #097137;
   border-color: #097137;
 }
+
 .form-group .input-hint {
   font-size: 0.95rem;
   color: #575656;
   margin-top: 0.2rem;
 }
+
 /* Botones del wizard */
 .wizard-buttons {
   display: flex;
@@ -2960,18 +3204,20 @@ main {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .btn {
     width: 100%;
     min-width: auto;
   }
 }
+
 .form-message {
   margin-top: 2rem;
   font-size: 1.1rem;
   color: #097137;
   text-align: center;
 }
+
 /* Ajuste visual para Select2 para igualar el alto de los inputs */
 .select2-container--default .select2-selection--single,
 .select2-container--default .select2-selection--multiple {
@@ -2985,19 +3231,23 @@ main {
   display: flex;
   align-items: center;
 }
+
 .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: 32px;
 }
+
 .select2-container--default .select2-selection--multiple .select2-selection__rendered {
   min-height: 32px;
   display: flex;
   align-items: center;
 }
+
 .select2-container--default .select2-selection--single:focus,
 .select2-container--default .select2-selection--multiple:focus {
   outline: 2px solid #097137;
   border-color: #097137;
 }
+
 /* --- Mejoras visuales para Participaciones --- */
 .participaciones-header {
   display: flex;
@@ -3005,6 +3255,7 @@ main {
   justify-content: space-between;
   margin-bottom: 1rem;
 }
+
 .btn-agregar-linea {
   background: #097137;
   color: #fff;
@@ -3019,10 +3270,12 @@ main {
   transition: background 0.2s, color 0.2s;
   cursor: pointer;
 }
+
 .btn-agregar-linea:hover {
   background: #07582b;
   color: #fff;
 }
+
 .participacion-item {
   background: #f9f9f9;
   border: 1.5px solid #e0e0e0;
@@ -3034,9 +3287,11 @@ main {
   gap: 1rem;
   flex-wrap: wrap;
 }
+
 .participacion-item .form-group {
   margin-bottom: 0;
 }
+
 .participacion-resumen {
   font-size: 1.08rem;
   margin: 0.5rem 0 1rem 0.2rem;
@@ -3044,14 +3299,17 @@ main {
   gap: 1.5rem;
   flex-wrap: wrap;
 }
+
 .participacion-resumen .ok {
   color: #097137;
   font-weight: 600;
 }
+
 .participacion-resumen .error {
   color: #dc3545;
   font-weight: 600;
 }
+
 .btn-eliminar {
   color: #dc3545;
   background: none;
@@ -3063,11 +3321,13 @@ main {
   align-items: center;
   font-weight: 500;
 }
+
 .btn-eliminar span {
   color: #dc3545;
   font-size: 1.5rem;
   margin-right: 4px;
 }
+
 /* Encabezado de aviso institucional */
 .note-box {
   display: flex;
@@ -3079,6 +3339,7 @@ main {
   border-left: 5px solid #097137;
   gap: 1rem;
 }
+
 .note-icon {
   color: #097137;
   font-size: 2.1rem;
@@ -3087,42 +3348,50 @@ main {
   justify-content: center;
   min-width: 2.5rem;
 }
+
 .note-content {
   font-size: 1.08rem;
   color: #575656;
 }
+
 @media (max-width: 900px) {
   main {
     padding: 1rem 0.5rem;
   }
+
   .header {
     flex-direction: column;
     gap: 0.5rem;
     padding: 1rem 0.5rem 0.5rem 0.5rem;
     align-items: center;
   }
+
   .logo {
     position: static;
     transform: none;
     height: 40px;
     margin-bottom: 0.5rem;
   }
+
   .header h1 {
     text-align: center;
     width: 100%;
     font-size: 2rem;
   }
+
   .participacion-item {
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
+
   .participaciones-header {
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
-} 
+}
+
 /* Modal de cancelación */
 .modal-atn {
   display: none;
@@ -3223,8 +3492,13 @@ main {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive para modal */
@@ -3233,30 +3507,47 @@ main {
     margin: 20% auto;
     width: 95%;
   }
-  
+
   .modal-atn-buttons {
     flex-direction: column;
   }
-  
+
   .modal-btn-lg {
     width: 100%;
   }
-} 
+}
+
 .spinner-institucional {
   animation: spinner-rotate 1s linear infinite;
 }
+
 .spinner-institucional .path {
   stroke-linecap: round;
   animation: spinner-dash 1.4s ease-in-out infinite;
 }
+
 @keyframes spinner-rotate {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
+
 @keyframes spinner-dash {
-  0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
-  50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
-  100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
-} 
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
 
 /* Animaciones para bloques dinámicos */
 @keyframes slideInFromTop {
@@ -3265,6 +3556,7 @@ main {
     transform: translateY(-20px);
     max-height: 0;
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -3278,6 +3570,7 @@ main {
     transform: translateY(0);
     max-height: 500px;
   }
+
   to {
     opacity: 0;
     transform: translateY(-20px);
@@ -3350,7 +3643,7 @@ main {
 /* Animación para el resumen de participaciones */
 .participacion-resumen {
   animation: slideInFromTop 0.3s ease-out;
-} 
+}
 
 /* Sección bloqueada */
 .section-blocked {
@@ -3403,19 +3696,19 @@ main {
   .section-blocked {
     padding: 40px 15px;
   }
-  
+
   .section-blocked-icon {
     font-size: 3rem;
   }
-  
+
   .section-blocked-title {
     font-size: 1.3rem;
   }
-  
+
   .section-blocked-message {
     font-size: 1rem;
   }
-} 
+}
 
 /* Estilos para bloques de episodios */
 .bloque-episodios {
@@ -3681,7 +3974,7 @@ main {
   border-radius: 10px;
   margin-bottom: 24px;
   background: #f4fff9;
-  box-shadow: 0 2px 8px rgba(26,127,90,0.04);
+  box-shadow: 0 2px 8px rgba(26, 127, 90, 0.04);
 }
 
 .bloque-episodios-header {
@@ -3707,7 +4000,7 @@ main {
 }
 
 .bloque-episodios-content {
-  transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
   overflow: hidden;
   max-height: 3000px;
   opacity: 1;
@@ -3753,3 +4046,434 @@ main {
   background: #a8a8a8;
 }
 
+/* ========================================
+   ESTILOS PARA UI INLINE - PARTICIPACIONES GENERALES
+   ======================================== */
+
+/* Contenedor de pregunta */
+.pregunta-participaciones-container {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #097137;
+}
+
+.pregunta-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pregunta-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #097137;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pregunta-label i {
+  font-size: 1.3rem;
+}
+
+.pregunta-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-left: 2rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.radio-option:hover {
+  border-color: #097137;
+  background: #f8fff9;
+}
+
+.radio-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #097137;
+}
+
+.radio-option input[type="radio"]:checked+.radio-label {
+  color: #097137;
+  font-weight: 600;
+}
+
+.radio-option:has(input:checked) {
+  border-color: #097137;
+  background: #f0f8f5;
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.1);
+}
+
+.radio-label {
+  font-size: 1rem;
+  color: #575656;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Secciones inline */
+.inline-section {
+  margin: 2rem 0;
+  padding: 2rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.inline-section-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #097137;
+}
+
+.inline-section-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #097137;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inline-section-header h3 i {
+  font-size: 1.4rem;
+}
+
+.section-hint {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Cantidad de episodios calculada */
+.cantidad-episodios-display {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #e8f5e9;
+  border-left: 4px solid #097137;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #097137;
+}
+
+.cantidad-episodios-display i {
+  font-size: 1.2rem;
+}
+
+.cantidad-episodios-display strong {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Tablas inline */
+.tabla-participaciones-inline,
+.tabla-titulos-inline {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.tabla-participaciones-inline th,
+.tabla-titulos-inline th {
+  background: #f5f8f6;
+  color: #097137;
+  font-weight: 600;
+  padding: 12px 16px;
+  border: none;
+  font-size: 1rem;
+  text-align: left;
+  border-radius: 8px 8px 0 0;
+  white-space: nowrap;
+}
+
+.tabla-participaciones-inline td,
+.tabla-titulos-inline td {
+  background: #fff;
+  padding: 12px 16px;
+  border: none;
+  vertical-align: middle;
+  border-radius: 8px;
+}
+
+.tabla-participaciones-inline input,
+.tabla-participaciones-inline select,
+.tabla-titulos-inline input,
+.tabla-titulos-inline select {
+  width: 100%;
+  min-width: 140px;
+  padding: 10px 12px;
+  border: 1.5px solid #c9e2d0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f8fdfb;
+  color: #222;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.tabla-participaciones-inline input:focus,
+.tabla-participaciones-inline select:focus,
+.tabla-titulos-inline input:focus,
+.tabla-titulos-inline select:focus {
+  border-color: #097137;
+  background: #fff;
+}
+
+.tabla-participaciones-inline .btn-eliminar-participacion-inline,
+.tabla-titulos-inline .btn-eliminar-titulo-inline {
+  background: #fff;
+  color: #dc3545;
+  border: 1.5px solid #dc3545;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.tabla-participaciones-inline .btn-eliminar-participacion-inline:hover,
+.tabla-titulos-inline .btn-eliminar-titulo-inline:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* Animaciones para filas inline */
+.tabla-participaciones-inline tbody tr,
+.tabla-titulos-inline tbody tr {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: slideInRow 0.3s ease-out forwards;
+}
+
+.tabla-participaciones-inline tbody tr.removing,
+.tabla-titulos-inline tbody tr.removing {
+  opacity: 1;
+  transform: translateY(0);
+  animation: slideOutRow 0.3s ease-in forwards;
+}
+
+@keyframes slideInRow {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutRow {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Botones de agregar inline */
+.btn-agregar-participacion-inline,
+.btn-agregar-titulo-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #097137;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(9, 113, 55, 0.07);
+  transition: all 0.2s ease;
+}
+
+.btn-agregar-participacion-inline:hover,
+.btn-agregar-titulo-inline:hover {
+  background: #0bbd6b;
+  color: #fff;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(9, 113, 55, 0.15);
+}
+
+.btn-agregar-participacion-inline:active,
+.btn-agregar-titulo-inline:active {
+  transform: scale(0.98);
+}
+
+/* Resumen de participaciones inline */
+#participacion-resumen-inline {
+  margin-top: 1rem;
+}
+
+#participacion-resumen-inline h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+#participacion-resumen-inline ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#participacion-resumen-inline li {
+  padding: 0.5rem 0;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pregunta-opciones {
+    margin-left: 0;
+  }
+
+  .inline-section {
+    padding: 1.5rem 1rem;
+  }
+
+  .inline-section-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .tabla-participaciones-inline th,
+  .tabla-participaciones-inline td,
+  .tabla-titulos-inline th,
+  .tabla-titulos-inline td {
+    padding: 8px 4px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pregunta-label {
+    font-size: 1rem;
+  }
+
+  .radio-option {
+    padding: 0.75rem;
+  }
+
+  .radio-label {
+    font-size: 0.9rem;
+  }
+
+  .inline-section-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .cantidad-episodios-display {
+    font-size: 0.9rem;
+  }
+}
+
+/* ========================================
+   ESTILOS PARA EPISODIOS EDITABLES INLINE
+   ======================================== */
+
+/* Contenedor de episodios simplificado */
+.episodios-list-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Item de episodio simple (label + input) */
+.episodio-item-simple {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.episodio-item-simple:hover {
+  background: #e9ecef;
+}
+
+/* Label del episodio */
+.episodio-label {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  min-width: 120px;
+  font-weight: 500;
+  color: #333;
+}
+
+.episodio-numero {
+  font-size: 0.95rem;
+  color: #097137;
+}
+
+/* Input editable inline */
+.titulo-episodio-inline {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.titulo-episodio-inline:focus {
+  outline: none;
+  border-color: #097137;
+  box-shadow: 0 0 0 3px rgba(9, 113, 55, 0.1);
+}
+
+.titulo-episodio-inline::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+/* Header del intervalo simplificado */
+.intervalo-header h4 {
+  margin: 0;
+  padding: 0.75rem 0;
+  color: #097137;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #097137;
+}
+
+/* Responsive para episodios inline */
+@media (max-width: 768px) {
+  .episodio-item-simple {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .episodio-label {
+    min-width: auto;
+  }
+
+  .titulo-episodio-inline {
+    width: 100%;
+  }
+}
