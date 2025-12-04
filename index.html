@@ -31,7 +31,7 @@
             </div>
             <div class="progress-slide" data-step="2">
               <div class="progress-step">2</div>
-              <span class="step-label">Exhibición Internacional</span>
+              <span class="step-label">Títulos Extranjeros</span>
             </div>
             <div class="progress-slide" data-step="3">
               <div class="progress-step">3</div>
@@ -201,7 +201,7 @@
                 <!-- Campo de subida de firma -->
                 <div class="signature-section">
                   <h6><i class="fas fa-signature"></i> Firma Digital *</h6>
-                  
+
                   <!-- Nota informativa sobre la firma -->
                   <div class="firma-info-grid">
                     <div class="firma-info-item">
@@ -209,18 +209,26 @@
                         <i class="fas fa-info-circle"></i>
                         <strong>Importante</strong>
                       </div>
-                      <p>Tu firma solo será utilizada para incluirla en la ficha de declaración de obra audiovisual y <strong>no se almacenará ni usará para ningún otro fin</strong>. Esto permitirá simplificar y finalizar el proceso de declaración ya que no se requerirá ninguna otra acción por parte tuya.</p>
+                      <p>Tu firma solo será utilizada para incluirla en la ficha de declaración de obra audiovisual y
+                        <strong>no se almacenará ni usará para ningún otro fin</strong>. Esto permitirá simplificar y
+                        finalizar el proceso de declaración ya que no se requerirá ninguna otra acción por parte tuya.
+                      </p>
                     </div>
-                    
+
                     <div class="firma-info-item">
                       <div class="firma-info-header">
                         <i class="fas fa-question-circle"></i>
                         <strong>¿Qué ocurre si no sube su firma?</strong>
                       </div>
-                      <p>Si decides <strong>no subir tu firma</strong>, igualmente se generará automáticamente la ficha de declaración de obra audiovisual con todos los datos ingresados en el formulario <strong>excepto la firma</strong>. Lo recibirás por correo electrónico una vez finalizada la declaración pero para hacerla efectiva <strong>deberás firmarlo manualmente</strong> y responder al correo adjuntando el documento firmado.</p>
+                      <p>Si decides <strong>no subir tu firma</strong>, igualmente se generará automáticamente la ficha
+                        de declaración de obra audiovisual con todos los datos ingresados en el formulario
+                        <strong>excepto la firma</strong>. Lo recibirás por correo electrónico una vez finalizada la
+                        declaración pero para hacerla efectiva <strong>deberás firmarlo manualmente</strong> y responder
+                        al correo adjuntando el documento firmado.
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div class="upload-container">
                     <div class="file-input-wrapper">
                       <input type="file" id="firma-file" name="firma" accept=".png,.jpg,.jpeg" class="file-input">
@@ -264,10 +272,12 @@
                         <!-- Esta sección se llenará dinámicamente con JavaScript -->
                         <div class="notificacion-header">
                           <h4>Notificación a participantes</h4>
-                          <p>Al enviar este formulario, se notificará automáticamente a los siguientes participantes:
+                          <p>Al enviar este formulario, se notificará automáticamente a los participantes con correo
+                            registrado.
                           </p>
-                          <div class="alerta-correos">Puede haber autores sin correo electrónico actualizado. Se
-                            recomienda notificarlos manualmente mientras se actualizan los datos en ATN.</div>
+                          <div class="alerta-correos" id="alerta-correos-faltantes">
+                            <!-- Este mensaje se actualizará dinámicamente con JavaScript -->
+                          </div>
                         </div>
                         <ul class="lista-participantes-notificacion">
                           <li>No hay participantes para notificar</li>
@@ -313,7 +323,7 @@
           </div>
           <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
             <button type="button" class="btn btn-outline-success btn-agregar-participacion">
-              <i class="fas fa-plus"></i> Agregar participación
+              <i class="fas fa-plus"></i> Agregar otra participación
             </button>
           </div>
           <div id="participacion-resumen-modal" class="participacion-resumen"></div>
@@ -330,6 +340,8 @@
   </main>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <!-- App Core -->
+  <script src="app-core.js"></script>
   <script src="form-wizard.js"></script>
   <!-- Modal de confirmación para cancelar -->
   <div id="modalCancelar" class="modal-atn">
@@ -338,7 +350,8 @@
         <h3>Confirmar Cancelación</h3>
       </div>
       <div class="modal-atn-message">
-        <p>¿Está seguro que desea cancelar la declaración? Todos los datos ingresados se perderán.</p>
+        <p>¿Estás seguro/a que deseas cancelar la declaración de obra? Todos los datos ingresados hasta este momento se
+          perderán.</p>
       </div>
       <div class="modal-atn-buttons">
         <button type="button" id="modalCancelarSi" class="modal-btn-lg btn-secondary">Sí, Cancelar</button>
