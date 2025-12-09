@@ -2585,11 +2585,11 @@ async function renderStepEpisodios(container) {
           <div class="pregunta-opciones">
             <label class="radio-option">
               <input type="radio" name="mismas-participaciones" value="si" id="radio-participaciones-si">
-              <span class="radio-label">Sí, todos los episodios tienen las mismas participaciones y porcentajes (de autoría)</span>
+              <span class="radio-label">Sí, todos los episodios tienen las mismas participaciones</span>
             </label>
             <label class="radio-option">
               <input type="radio" name="mismas-participaciones" value="no" id="radio-participaciones-no">
-              <span class="radio-label">No, las participaciones varían por temporada, episodio o bloque/grupo de episodios</span>
+              <span class="radio-label">No, las participaciones varían por episodio o bloque</span>
             </label>
           </div>
         </div>
@@ -2845,9 +2845,9 @@ async function renderParticipacionesInline() {
     </div>
 
     <!-- SECCIÓN 3: Títulos extranjeros/traducidos -->
-    <div class="inline-section">
-      <div class="inline-section-header">
-        <h3><i class="fas fa-globe"></i> Títulos extranjeros/traducidos de los episodios (opcional)</h3>
+    <div class="inline-section" style="display:none;">
+          <div class="inline-section-header">
+            <h3><i class="fas fa-globe"></i> Títulos extranjeros/traducidos de los episodios (opcional)</h3>
         <p class="section-hint">Registra títulos alternativos si la obra se exhibió en otros idiomas o países</p>
       </div>
       
@@ -3642,7 +3642,7 @@ function restoreStepEpisodios(container) {
               <i class="fas fa-table"></i> Registrar participaciones del intervalo
             </button>
           </div>
-          <div class="subbloque">
+          <div class="subbloque" style="display:none;">
             <h4>Títulos extranjeros/traducidos de los episodios (opcional)</h4>
             <div class="episodios-titulos"></div>
             <button type="button" class="btn btn-outline-success btn-gestionar-titulos" style="margin-top:10px;" data-bloque-id="${bloqueId}">
@@ -3675,6 +3675,14 @@ function restoreStepEpisodios(container) {
       });
       toggleBtn.addEventListener('click', () => {
         toggleBloqueContent(contentColapsable, toggleBtn);
+      });
+    }
+
+    // FIX: Agregar event listener para el botón "+ Agregar otro intervalo"
+    const btnAgregarOtroIntervalo = bloqueColapsable.querySelector('.btn-agregar-otro-intervalo');
+    if (btnAgregarOtroIntervalo) {
+      btnAgregarOtroIntervalo.addEventListener('click', function () {
+        agregarBloqueEpisodios();
       });
     }
 
@@ -3864,7 +3872,7 @@ function agregarBloqueEpisodios() {
       </div>
       
       <!-- Subbloque 3: Títulos extranjeros/traducidos (MOVIDO DESPUÉS DE PARTICIPACIONES) -->
-      <div class="subbloque">
+      <div class="subbloque" style="display:none;">
         <h4>Títulos extranjeros/traducidos de los episodios (opcional)</h4>
         <div class="episodios-titulos">
           <!-- Los títulos de episodios se generarán aquí -->
