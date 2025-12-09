@@ -2585,11 +2585,11 @@ async function renderStepEpisodios(container) {
           <div class="pregunta-opciones">
             <label class="radio-option">
               <input type="radio" name="mismas-participaciones" value="si" id="radio-participaciones-si">
-              <span class="radio-label">Sí, todos los episodios tienen las mismas participaciones</span>
+              <span class="radio-label">Sí, todos los episodios tienen las mismas participaciones y porcentajes (de autoría)</span>
             </label>
             <label class="radio-option">
               <input type="radio" name="mismas-participaciones" value="no" id="radio-participaciones-no">
-              <span class="radio-label">No, las participaciones varían por episodio o bloque</span>
+              <span class="radio-label">No, las participaciones varían por temporada, episodio o bloque/grupo de episodios</span>
             </label>
           </div>
         </div>
