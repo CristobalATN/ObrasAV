@@ -128,8 +128,8 @@ function saveEpisodiosData() {
   // Verificar si es obra serializada
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela'];
-  const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
+  // Usar la constante global FORMATOS_SERIALIZADOS que incluye todos los formatos serializados
+  const esSerializada = FORMATOS_SERIALIZADOS.includes(formatoSeleccionado);
 
   console.log('Formato seleccionado:', formatoSeleccionado);
   console.log('Es obra serializada:', esSerializada);
@@ -2072,8 +2072,8 @@ async function renderStepParticipaciones(container) {
   // Verificar si la obra es serializada
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela'];
-  const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
+  // Usar la constante global FORMATOS_SERIALIZADOS que incluye todos los formatos serializados
+  const esSerializada = FORMATOS_SERIALIZADOS.includes(formatoSeleccionado);
 
   if (esSerializada) {
     container.innerHTML = `
@@ -2536,8 +2536,8 @@ async function renderStepEpisodios(container) {
   // Intentar obtener el valor del campo formato directamente del DOM
   const formatoField = document.getElementById('formato');
   const formatoSeleccionado = formatoField ? formatoField.value : (formData.formato || '');
-  const obrasSerializadas = ['Serie', 'Telenovela'];
-  const esSerializada = obrasSerializadas.includes(formatoSeleccionado);
+  // Usar la constante global FORMATOS_SERIALIZADOS que incluye todos los formatos serializados
+  const esSerializada = FORMATOS_SERIALIZADOS.includes(formatoSeleccionado);
 
   console.log('Debug episodios:', {
     formatoField: formatoField,
@@ -3709,18 +3709,18 @@ function restoreStepEpisodios(container) {
     }
 
     // Si hay datos de intervalo, generar episodios
-      if (bloqueData.desdeEpisodio && bloqueData.hastaEpisodio) {
+    if (bloqueData.desdeEpisodio && bloqueData.hastaEpisodio) {
+      setTimeout(() => {
+        generarEpisodiosIndividuales(bloqueId, bloqueData.desdeEpisodio, bloqueData.hastaEpisodio);
         setTimeout(() => {
-          generarEpisodiosIndividuales(bloqueId, bloqueData.desdeEpisodio, bloqueData.hastaEpisodio);
-          setTimeout(() => {
-            restaurarDatosEpisodios(bloqueId, bloqueData);
-            // Reinsertar resumen de participaciones tras restaurar datos
-            if (participacionesPorBloque[bloqueId] && Array.isArray(participacionesPorBloque[bloqueId]) && participacionesPorBloque[bloqueId].length > 0) {
-              mostrarTablaResumenParticipaciones(bloqueId);
-            }
-          }, 100);
-        }, 50);
-      }
+          restaurarDatosEpisodios(bloqueId, bloqueData);
+          // Reinsertar resumen de participaciones tras restaurar datos
+          if (participacionesPorBloque[bloqueId] && Array.isArray(participacionesPorBloque[bloqueId]) && participacionesPorBloque[bloqueId].length > 0) {
+            mostrarTablaResumenParticipaciones(bloqueId);
+          }
+        }, 100);
+      }, 50);
+    }
   });
 }
 
