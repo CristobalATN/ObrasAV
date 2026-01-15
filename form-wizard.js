@@ -5994,3 +5994,4 @@ function actualizarListaParticipantes() {
 
 // Hacer la función disponible globalmente
 window.actualizarListaParticipantes = actualizarListaParticipantes;
+
