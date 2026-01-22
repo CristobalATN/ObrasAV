@@ -1399,7 +1399,7 @@ function clearError(element) {
 function validarAnio(anio) {
   if (!anio) return false;
   const year = parseInt(anio, 10);
-  return !isNaN(year) && year >= 1900 && year <= 2025;
+  return !isNaN(year) && year >= 1900 && year <= 2026;
 }
 
 function validateStep1() {
