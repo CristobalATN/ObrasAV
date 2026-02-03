@@ -1961,6 +1961,7 @@ function filtrarParticipantesSinCorreo(formDataToFilter) {
 async function submitForm(e) {
   e.preventDefault();
   if (!validateStep1()) return;
+  if (!validateStepFirma()) return;
 
   // Formatear campos de nombres (actores, directores, guionistas)
   validarCamposNombres();
@@ -5752,11 +5753,15 @@ function validateStepFirma() {
 
   // Validar firma
   const fileInput = document.getElementById('firma-file');
+  const firmaContainer = fileInput ? (fileInput.closest('.file-input-wrapper') || fileInput.parentElement) : null;
   if (!fileInput.files || fileInput.files.length === 0) {
-    showError(fileInput.parentElement, 'Por favor, adjunta tu firma digital.');
+    if (firmaContainer) showError(firmaContainer, 'Por favor, adjunta tu firma digital.');
+    isValid = false;
+  } else if (!formData.firma || !formData.firma.base64) {
+    if (firmaContainer) showError(firmaContainer, 'Espera un momento: la firma aún se está cargando.');
     isValid = false;
   } else {
-    clearError(fileInput.parentElement);
+    if (firmaContainer) clearError(firmaContainer);
   }
 
   // Validar checkbox de declaración de veracidad
@@ -5994,4 +5999,3 @@ function actualizarListaParticipantes() {
 
 // Hacer la función disponible globalmente
 window.actualizarListaParticipantes = actualizarListaParticipantes;
-
