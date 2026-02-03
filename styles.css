@@ -1286,7 +1286,7 @@ main {
 /* Responsive para la grilla de información de firma */
 @media (min-width: 768px) {
   .firma-info-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 2rem;
   }
 }
