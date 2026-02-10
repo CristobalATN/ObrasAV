@@ -25,6 +25,24 @@ let contadorBloquesEpisodios = 0;
 // Formatos serializados (para ocultar/mostrar pasos dinámicamente)
 const FORMATOS_SERIALIZADOS = ['Serie', 'Telenovela', 'Miniserie', 'Serie documental'];
 
+function updateDuracionFieldUI(formato) {
+  const duracionGroup = document.getElementById('duracion-group');
+  const duracionLabel = document.getElementById('duracion-label');
+  const duracionInput = document.getElementById('duracion');
+  if (!duracionGroup || !duracionLabel || !duracionInput) return;
+
+  if (!formato) {
+    duracionGroup.style.display = 'none';
+    duracionInput.value = '';
+    clearError(duracionInput);
+    return;
+  }
+
+  const esSerializada = FORMATOS_SERIALIZADOS.includes(formato);
+  duracionLabel.textContent = esSerializada ? 'Duración promedio de los episodios' : 'Duración de la obra';
+  duracionGroup.style.display = '';
+}
+
 function saveEpisodiosData() {
   console.log('=== INICIO saveEpisodiosData ===');
 
@@ -942,6 +960,11 @@ async function renderStep1(container) {
       </select>
       <div class="input-hint">Puedes seleccionar varios idiomas.</div>
     </div>
+    <div class="form-group" id="duracion-group" style="display:none;">
+      <label for="duracion"><span id="duracion-label">Duración</span> <span style="color: #dc3545;">*</span></label>
+      <input type="number" id="duracion" name="duracion" min="1" step="1" placeholder="Ej: 90">
+      <div class="input-hint">Ingresa la duración en minutos.</div>
+    </div>
     <div class="form-group">
       <label for="actores">Actores</label>
       <input type="text" id="actores" name="actores" placeholder="Ej: Ana Silva, Carlos Rojas">
@@ -1021,7 +1044,10 @@ async function renderStep1(container) {
 
     // *** OCULTAR/MOSTRAR PASOS SEGÚN FORMATO ***
     toggleStepVisibility(formatoSel);
+    updateDuracionFieldUI(formatoSel);
   });
+
+  updateDuracionFieldUI(document.getElementById('formato')?.value || '');
 }
 
 // Normaliza nombres: quita espacios extra y pone espacio tras coma
@@ -1410,6 +1436,8 @@ function validateStep1() {
   document.querySelectorAll('.error-message').forEach(el => el.remove());
   document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
 
+  const formatoValue = document.getElementById('formato')?.value?.trim() || '';
+
   // Validar año primero
   const anioInput = document.getElementById('anio');
   if (anioInput) {
@@ -1420,6 +1448,21 @@ function validateStep1() {
     } else if (!validarAnio(anio)) {
       showError(anioInput, 'El año debe estar entre 1900 y 2025');
       isValid = false;
+    }
+  }
+
+  const duracionInput = document.getElementById('duracion');
+  if (formatoValue && duracionInput) {
+    const raw = duracionInput.value?.trim ? duracionInput.value.trim() : duracionInput.value;
+    const n = raw === '' ? NaN : Number(raw);
+    if (!raw) {
+      showError(duracionInput, 'El campo Duración es obligatorio');
+      isValid = false;
+    } else if (!Number.isInteger(n) || n <= 0) {
+      showError(duracionInput, 'La duración debe ser un número entero mayor que 0');
+      isValid = false;
+    } else {
+      clearError(duracionInput);
     }
   }
 
@@ -1684,6 +1727,7 @@ if (!window.formData) {
     paises: [],
     anio: '',
     idioma: [],
+    duracion: '',
     actores: '',
     directores: '',
     guionistas: '',
@@ -1709,6 +1753,7 @@ function saveStep1Data() {
     paises: document.getElementById('paises'),
     anio: document.getElementById('anio'),
     idioma: document.getElementById('idioma'),
+    duracion: document.getElementById('duracion'),
     actores: document.getElementById('actores'),
     directores: document.getElementById('directores'),
     guionistas: document.getElementById('guionistas'),
@@ -1723,6 +1768,9 @@ function saveStep1Data() {
     if ((key === 'paises' || key === 'productora' || key === 'idioma') && element.multiple) {
       step1[key] = Array.from(element.selectedOptions).map(opt => opt.value);
       if (!step1[key] || step1[key].length === 0) step1[key] = [];
+    } else if (key === 'duracion') {
+      const raw = element.value?.trim ? element.value.trim() : element.value;
+      step1[key] = raw ? parseInt(raw, 10) : '';
     } else if (element.type === 'checkbox' || element.type === 'radio') {
       step1[key] = element.checked;
     } else {
@@ -1747,6 +1795,7 @@ function restoreStep1Data(container) {
     'paises': Array.isArray(formData.step1.paises) ? formData.step1.paises : (formData.step1.paises ? [formData.step1.paises] : []),
     'anio': formData.step1.anio || '',
     'idioma': Array.isArray(formData.step1.idioma) ? formData.step1.idioma : (formData.step1.idioma ? [formData.step1.idioma] : []),
+    'duracion': (formData.step1.duracion ?? '') === '' ? '' : String(formData.step1.duracion),
     'actores': formData.step1.actores || '',
     'directores': formData.step1.directores || '',
     'guionistas': formData.step1.guionistas || '',
@@ -1776,6 +1825,7 @@ function restoreStep1Data(container) {
     }
   });
   setupNameValidation();
+  updateDuracionFieldUI(formData.step1.formato || '');
   console.log('Datos del paso 1 restaurados');
 }
 
