@@ -29,18 +29,31 @@ function updateDuracionFieldUI(formato) {
   const duracionGroup = document.getElementById('duracion-group');
   const duracionLabel = document.getElementById('duracion-label');
   const duracionInput = document.getElementById('duracion');
+  const cantidadEpisodiosGroup = document.getElementById('cantidad-episodios-group');
   if (!duracionGroup || !duracionLabel || !duracionInput) return;
 
   if (!formato) {
     duracionGroup.style.display = 'none';
     duracionInput.value = '';
     clearError(duracionInput);
+    if (cantidadEpisodiosGroup) {
+      cantidadEpisodiosGroup.style.display = 'none';
+      const cantidadInput = document.getElementById('cantidad_episodios');
+      if (cantidadInput) { cantidadInput.value = ''; clearError(cantidadInput); }
+    }
     return;
   }
 
   const esSerializada = FORMATOS_SERIALIZADOS.includes(formato);
   duracionLabel.textContent = esSerializada ? 'Duración promedio de los episodios' : 'Duración de la obra';
   duracionGroup.style.display = '';
+  if (cantidadEpisodiosGroup) {
+    cantidadEpisodiosGroup.style.display = esSerializada ? '' : 'none';
+    if (!esSerializada) {
+      const cantidadInput = document.getElementById('cantidad_episodios');
+      if (cantidadInput) { cantidadInput.value = ''; clearError(cantidadInput); }
+    }
+  }
 }
 
 function saveEpisodiosData() {
@@ -965,6 +978,19 @@ async function renderStep1(container) {
       <input type="number" id="duracion" name="duracion" min="1" step="1" placeholder="Ej: 90">
       <div class="input-hint">Ingresa la duración en minutos.</div>
     </div>
+    <div class="form-group" id="cantidad-episodios-group" style="display:none;">
+      <label for="cantidad_episodios" style="display:flex;align-items:center;gap:8px;">
+        Cantidad de episodios <span style="color: #dc3545;">*</span>
+        <div class="help-tooltip" style="display:inline-block;">
+          <span class="help-icon">?</span>
+          <div class="tooltip-content">
+            <p>Indica la cantidad total de episodios de la obra serializada que deseas declarar, es importante mencionar que los episodios totales que indiques de la obra no necesariamente son los que cuentas con participaciones, sino más bien es un dato meramente informativo para facilitar la gestión interna de tu obra declarada, las participaciones las gestionas más adelante en el formulario.</p>
+          </div>
+        </div>
+      </label>
+      <input type="number" id="cantidad_episodios" name="cantidad_episodios" min="1" step="1" placeholder="Ej: 13">
+      <div class="input-hint">Ingresa el número total de episodios de la obra.</div>
+    </div>
     <div class="form-group">
       <label for="actores">Actores</label>
       <input type="text" id="actores" name="actores" placeholder="Ej: Ana Silva, Carlos Rojas">
@@ -1466,6 +1492,21 @@ function validateStep1() {
     }
   }
 
+  const cantidadEpisodiosInput = document.getElementById('cantidad_episodios');
+  if (FORMATOS_SERIALIZADOS.includes(formatoValue) && cantidadEpisodiosInput) {
+    const rawCantidad = cantidadEpisodiosInput.value?.trim ? cantidadEpisodiosInput.value.trim() : cantidadEpisodiosInput.value;
+    const nCantidad = rawCantidad === '' ? NaN : Number(rawCantidad);
+    if (!rawCantidad) {
+      showError(cantidadEpisodiosInput, 'El campo Cantidad de episodios es obligatorio');
+      isValid = false;
+    } else if (!Number.isInteger(nCantidad) || nCantidad <= 0) {
+      showError(cantidadEpisodiosInput, 'La cantidad de episodios debe ser un número entero mayor que 0');
+      isValid = false;
+    } else {
+      clearError(cantidadEpisodiosInput);
+    }
+  }
+
   // Campos obligatorios (excluyendo año que ya validamos)
   const requiredFields = [
     { id: 'titulo', label: 'Título' },
@@ -1728,6 +1769,7 @@ if (!window.formData) {
     anio: '',
     idioma: [],
     duracion: '',
+    cantidad_episodios: '',
     actores: '',
     directores: '',
     guionistas: '',
@@ -1754,6 +1796,7 @@ function saveStep1Data() {
     anio: document.getElementById('anio'),
     idioma: document.getElementById('idioma'),
     duracion: document.getElementById('duracion'),
+    cantidad_episodios: document.getElementById('cantidad_episodios'),
     actores: document.getElementById('actores'),
     directores: document.getElementById('directores'),
     guionistas: document.getElementById('guionistas'),
@@ -1768,7 +1811,7 @@ function saveStep1Data() {
     if ((key === 'paises' || key === 'productora' || key === 'idioma') && element.multiple) {
       step1[key] = Array.from(element.selectedOptions).map(opt => opt.value);
       if (!step1[key] || step1[key].length === 0) step1[key] = [];
-    } else if (key === 'duracion') {
+    } else if (key === 'duracion' || key === 'cantidad_episodios') {
       const raw = element.value?.trim ? element.value.trim() : element.value;
       step1[key] = raw ? String(parseInt(raw, 10)) : '';
     } else if (element.type === 'checkbox' || element.type === 'radio') {
@@ -1796,6 +1839,7 @@ function restoreStep1Data(container) {
     'anio': formData.step1.anio || '',
     'idioma': Array.isArray(formData.step1.idioma) ? formData.step1.idioma : (formData.step1.idioma ? [formData.step1.idioma] : []),
     'duracion': (formData.step1.duracion ?? '') === '' ? '' : String(formData.step1.duracion),
+    'cantidad_episodios': (formData.step1.cantidad_episodios ?? '') === '' ? '' : String(formData.step1.cantidad_episodios),
     'actores': formData.step1.actores || '',
     'directores': formData.step1.directores || '',
     'guionistas': formData.step1.guionistas || '',
