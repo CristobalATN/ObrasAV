@@ -1770,7 +1770,7 @@ function saveStep1Data() {
       if (!step1[key] || step1[key].length === 0) step1[key] = [];
     } else if (key === 'duracion') {
       const raw = element.value?.trim ? element.value.trim() : element.value;
-      step1[key] = raw ? parseInt(raw, 10) : '';
+      step1[key] = raw ? String(parseInt(raw, 10)) : '';
     } else if (element.type === 'checkbox' || element.type === 'radio') {
       step1[key] = element.checked;
     } else {
@@ -2017,7 +2017,7 @@ async function submitForm(e) {
   validarCamposNombres();
 
   // Guardar datos de todos los pasos antes del envío
-  saveCurrentStepData();
+  await saveCurrentStepData();
   saveStep1Data();
   saveStepFirmaData(); // Asegurar que los datos del declarante se guarden
 
@@ -2049,7 +2049,7 @@ async function submitForm(e) {
     console.log('Status:', response.status);
     const text = await response.text();
     console.log('Respuesta del servidor:', text);
-    if (!response.ok) throw new Error('Error en la respuesta');
+    if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
 
     // Mostrar mensaje de éxito y redirigir a página de éxito
     showSuccessMessage('¡Declaración enviada correctamente!', 'success');
@@ -2059,7 +2059,10 @@ async function submitForm(e) {
 
   } catch (err) {
     // Mostrar mensaje de error técnico más prominente
-    showErrorMessage('Ocurrió un problema técnico al enviar la declaración. Por favor, inténtelo nuevamente en unos minutos. Si el problema persiste, contacte al soporte técnico.');
+    const mensajeParaUsuario = (err.message && err.message.startsWith('Error HTTP'))
+      ? `No se pudo enviar la declaración (${err.message}). Por favor, inténtelo nuevamente en unos minutos. Si el problema persiste, contacte al soporte técnico.`
+      : 'Ocurrió un problema técnico al enviar la declaración. Por favor, inténtelo nuevamente en unos minutos. Si el problema persiste, contacte al soporte técnico.';
+    showErrorMessage(mensajeParaUsuario);
     console.error('Error en envío:', err);
   } finally {
     document.getElementById('submit-btn').disabled = false;
